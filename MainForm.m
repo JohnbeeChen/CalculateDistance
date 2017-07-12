@@ -155,14 +155,17 @@ if filename
     rois = ReadImageJROI(roi_filename);
     roi_num = length(rois);
     box =zeros(roi_num,5);
+    roi_names{1} = [];
     if roi_num == 1
         box(1,1:4) = rois.vnRectBounds;
         box(1,5) = rois.nPositon;
+        roi_names{1} = rois.strName;
     elseif roi_num > 1
         for ii = 1:roi_num
             tem = rois{ii};
             box(ii,1:4) = tem.vnRectBounds;
             box(ii,5) = tem.nPosition;
+            roi_names{ii} = tem.strName;
         end
     end
     % changes the format of @box to [x y w h]
@@ -178,6 +181,7 @@ if filename
     box(idx) = img_size(1);    
     
     handles.roiboxs = box;
+    handles.roi_names = roi_names;
     AddRectagle(handles.axes1,box);
     guidata(hObject,handles);
 else
@@ -226,5 +230,6 @@ end
 centroids = centroids + boxs(:,1:2);
 handles.centroids = centroids;
 guidata(hObject,handles);
-s = {'centroid_x','centroid_y'};
-FormTable(centroids,s);
+col_name = {'centroid_x','centroid_y'};
+row_name = handles.roi_names;
+FormTable(centroids,boxs(:,5),col_name,row_name);

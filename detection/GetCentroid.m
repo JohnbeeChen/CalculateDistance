@@ -28,8 +28,10 @@ yc = yc/mass;
 
 if debug_flag
     figure
-    imagesc(tem_img);
+    [xd,yd] = meshgrid(1:x_len,1:y_len);
+    surface(xd,yd,tem_img);
     hold on
-    plot(xc,yc,'r*');
+    zc = tem_img(ceil(yc),ceil(xc));
+    plot3(xc,yc,zc,'r*');
 end
 varargout{1} = [xc,yc];

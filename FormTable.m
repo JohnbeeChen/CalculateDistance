@@ -55,13 +55,18 @@ function FormTable_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for FormTable
 handles.output = hObject;
 fit_result = varargin{1};
-col_name = varargin{2};
-set(handles.uitable1,'ColumnName',col_name,'Data',fit_result);
+fram_index = varargin{2};
+col_name = varargin{3};
+row_name = varargin{4};
+set(handles.uitable1,'RowName',row_name,'ColumnName',col_name,'Data',fit_result);
 
 % Update handles structure
 handles.displaydata = fit_result;
 handles.rawdata = fit_result;
 handles.index = 1;
+handles.row_name = row_name;
+handles.col_name = col_name;
+handles.fram_index = fram_index;
 guidata(hObject, handles);
 
 % UIWAIT makes FormTable wait for user response (see UIRESUME)
@@ -87,14 +92,19 @@ function btn_analysis_Callback(hObject, eventdata, handles)
 rawdata = handles.rawdata;
 len = size(rawdata,1);
 ds = zeros(len,len);
+fram_index = handles.fram_index;
 for ii = 1:len
-   point_one = rawdata(ii,:);
-   for jj = 1:len
-      point_two = rawdata(jj,:);
-      ds(ii,jj) = GetDistance(point_one,point_two);
+    point_one = rawdata(ii,:);
+    for jj = 1:len
+        if ii<jj
+            ds(ii,jj) = fram_index(jj) - fram_index(ii);
+        else
+            point_two = rawdata(jj,:);
+            ds(ii,jj) = GetDistance(point_one,point_two);
+        end
    end    
 end
-set(handles.uitable1,'ColumnName','numbered','Data',ds);
+set(handles.uitable1,'ColumnName',handles.row_name,'Data',ds);
 handles.displaydata = ds;
 guidata(hObject, handles);
 
@@ -106,8 +116,12 @@ function btn_saveexcel_Callback(hObject, eventdata, handles)
 [fName,pName,index] = uiputfile('*.xls','Save as','data_1.xls');
 if index && strcmp(fName(end-3:end),'.xls')
     str = [pName fName];
-    data = handles.displaydata;
-    xlswrite(str,data);   
+    data = get(handles.uitable1,'data');
+    data_excel = cell(size(data,1) + 1, size(data,2) + 1);
+    data_excel(1,2:end) = get(handles.uitable1,'ColumnName');
+    data_excel(2:end,1) = get(handles.uitable1,'RowName');
+    data_excel(2:end,2:end) = num2cell(data);
+    xlswrite(str,data_excel);   
 else
    disp('file path is not correct');    
 end
