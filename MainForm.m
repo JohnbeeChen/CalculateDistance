@@ -107,7 +107,8 @@ else
         %         handles.pathname = pathname;
     end
 end
-[handles.images,handles.ImageNumber]=tiffread(File);
+% [handles.images,handles.ImageNumber]=tiffread(File);
+handles.images = imreadstack_TIRF(File,1);
 SetAxesImage(handles.axes1,handles.images(:,:,1));
 guidata(hObject,handles);
 save('lastfile.mat','pathname','filename');
@@ -129,7 +130,7 @@ num = size(myBoxs,1);
 axes(myAxes);
 hold on
 for ii = 1:num
-    rectangle('Position',myBoxs(ii,:),'Curvature',[0,0],'LineWidth',1,'LineStyle','--','EdgeColor','r');
+    rectangle('Position',myBoxs(ii,1:4),'Curvature',[0,0],'LineWidth',1,'LineStyle','--','EdgeColor','r');
 end
 hold off
 
@@ -153,18 +154,21 @@ roi_filename = fullfile(pathname,filename);
 if filename
     rois = ReadImageJROI(roi_filename);
     roi_num = length(rois);
-    box =zeros(roi_num,4);
+    box =zeros(roi_num,5);
     if roi_num == 1
-        box(1,:) = rois.vnRectBounds;
+        box(1,1:4) = rois.vnRectBounds;
+        box(1,5) = rois.nPositon;
     elseif roi_num > 1
         for ii = 1:roi_num
             tem = rois{ii};
-            box(ii,:) = tem.vnRectBounds;
+            box(ii,1:4) = tem.vnRectBounds;
+            box(ii,5) = tem.nPosition;
         end
     end
     % changes the format of @box to [x y w h]
-    box(:,[4 3]) = box(:,3:4) - box(:,1:2) + 1;
-    box(:,1:2) = box(:,[2 1]); 
+    % notice: the loc in ImageJ start from 0, but Matlab start from 1
+    box(:,[4 3]) = box(:,3:4) - box(:,1:2) - 1;
+    box(:,1:2) = box(:,[2 1]) + 1; 
     idx = box(:,[1 2]) == 0;
     box(idx) = 1;
     img_size = size(handles.images(:,:,1));
@@ -197,24 +201,30 @@ function btn_findparticles_Callback(hObject, eventdata, handles)
 % hObject    handle to btn_findparticles (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-prompt={'Pixe size(/nm):','half-high-half-width of psf(/pixel):','least fram:','parallel flag:'};
-defaults={num2str(32.5),num2str(1.5),num2str(4),num2str(0)};
-info = inputdlg(prompt, 'Input for process...!', 1, defaults);
-if ~isempty(info)
-    parameters(1) = str2double(info(1));
-    parameters(2) = str2double(info(2));  
-    parameters(3) = str2double(info(3));
-    parameters(4) = str2double(info(4));    
-end
+
 boxs = handles.roiboxs;
-sim_event_info = handles.eventinfo;
-% tic
-% fit_result = SIM_Handle(double(handles.images),sim_event_info,boxs,parameters);
-% toc
-% handles.fit_result = fit_result;
+imgSIM = handles.images;
+len = size(boxs,1);
+img_num = size(imgSIM,3);
+centroids(len,2) = 0;
+for ii = 1:len
+    event_loc = boxs(ii,5);
+    if event_loc == 1
+        event_duration = 1:3;
+    elseif event_loc == img_num
+        event_duration = (img_num-2):img_num;       
+    else
+        event_duration = (event_loc-1):(event_loc+1);
+    end
+   
+    event_frams = imgSIM(:,:,event_duration);
+    %selects the roi region in @event_fram
+    tem_box = boxs(ii,:);
+    event_frams_roi = KeepROI(event_frams,tem_box);
+    centroids(ii,:) = GetCentroid(event_frams_roi);
+end
+centroids = centroids + boxs(:,1:2);
+handles.centroids = centroids;
 guidata(hObject,handles);
-colum_name = {'event_ordinal','start_fram','end_fram','pixel_loc_x','pixel_loc_y','delta_x','delta_y'};
-FormTable(handles.fit_result,colum_name);
-
-t= 1;
-
+s = {'centroid_x','centroid_y'};
+FormTable(centroids,s);

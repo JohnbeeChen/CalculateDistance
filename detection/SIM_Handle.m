@@ -33,7 +33,7 @@ for ii = 1:region_num
             event_frams_roi = KeepROI(event_frams,tem_box);
             particles = FindParticles(event_frams_roi,3,3);
             DV = Point_Linking(particles, psf_hw,least_fram);
-            tem_result = Point_Fitting(event_frams,DV,1);
+            tem_result = Point_Fitting(event_frams,DV,2);
             star_fram = tem_event(jj,1);
             % modifies the local fram_num to global fram_num
             tem_result = KeepStartFram(tem_result,star_fram);
@@ -49,7 +49,7 @@ for ii = 1:region_num
             disp(['event',num2str(jj),': fiting is starting']);
             event_duration = tem_event(jj,1):tem_event(jj,2);
             event_frams = imgSIM(:,:,event_duration);
-            %set all pixels equal to 0 that beyond the region
+            % set all pixels equal to 0 that beyond the region
             event_frams_roi = KeepROI(event_frams,tem_box);
             particles = FindParticles(event_frams_roi,3,3);
             DV = Point_Linking(particles, psf_hw,least_fram);
