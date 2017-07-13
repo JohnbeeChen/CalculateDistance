@@ -22,7 +22,7 @@ function varargout = FormTable(varargin)
 
 % Edit the above text to modify the response to help FormTable
 
-% Last Modified by GUIDE v2.5 12-Jul-2017 15:03:25
+% Last Modified by GUIDE v2.5 13-Jul-2017 09:03:45
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -61,7 +61,7 @@ row_name = varargin{4};
 set(handles.uitable1,'RowName',row_name,'ColumnName',col_name,'Data',fit_result);
 
 % Update handles structure
-handles.displaydata = fit_result;
+handles.displaydata{1} = fit_result;
 handles.rawdata = fit_result;
 handles.index = 1;
 handles.row_name = row_name;
@@ -89,6 +89,13 @@ function btn_analysis_Callback(hObject, eventdata, handles)
 % hObject    handle to btn_analysis (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+prompt={'Pixel size(nm):'};
+defaults={num2str(32.5)};
+info = inputdlg(prompt, 'Input for process...!', 1, defaults);
+pixesize = 1;
+if ~isempty(info)
+    pixesize = str2double(info(1));
+end
 rawdata = handles.rawdata;
 len = size(rawdata,1);
 ds = zeros(len,len);
@@ -100,21 +107,27 @@ for ii = 1:len
             ds(ii,jj) = fram_index(jj) - fram_index(ii);
         else
             point_two = rawdata(jj,:);
-            ds(ii,jj) = GetDistance(point_one,point_two);
+            ds(ii,jj) = pixesize*GetDistance(point_one,point_two);
         end
    end    
 end
 set(handles.uitable1,'ColumnName',handles.row_name,'Data',ds);
-handles.displaydata = ds;
+handles.distance = ds;
+handles.displaydata{2} = ds;
 guidata(hObject, handles);
+
+function y = GetDistance(pointOne, pointTwo)
+t = (pointOne - pointTwo).^2;
+t = sum(t);
+y = sqrt(t);
 
 % --- Executes on button press in btn_saveexcel.
 function btn_saveexcel_Callback(hObject, eventdata, handles)
 % hObject    handle to btn_saveexcel (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[fName,pName,index] = uiputfile('*.xls','Save as','data_1.xls');
-if index && strcmp(fName(end-3:end),'.xls')
+[fName,pName,index] = uiputfile('*.xlsx','Save as','data_1.xlsx');
+if index && strcmp(fName(end-4:end),'.xlsx')
     str = [pName fName];
     data = get(handles.uitable1,'data');
     data_excel = cell(size(data,1) + 1, size(data,2) + 1);
@@ -126,7 +139,33 @@ else
    disp('file path is not correct');    
 end
 
-function y = GetDistance(pointOne, pointTwo)
-t = (pointOne - pointTwo).^2;
-t = sum(t);
-y = sqrt(t);
+
+% --- Executes on button press in btn_select.
+function btn_select_Callback(hObject, eventdata, handles)
+% hObject    handle to btn_select (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if ~isfield(handles,'distance')
+   disp('please analysis firstly');
+   return;
+end
+prompt={'distance threshold(nm):'};
+defaults={num2str(32.5)};
+info = inputdlg(prompt, 'Input for process...!', 1, defaults);
+if ~isempty(info)
+    level = str2double(info(1));
+    data = handles.distance;
+    len = length(data);
+    for ii = 2:len       
+       for jj = 1:(ii-1)
+           %the distance less than the @level
+           if data(ii,jj)>level
+               data(ii,jj) = 0;
+           end
+       end
+    end
+    set(handles.uitable1,'Data',data);
+    handles.select_data = data;
+    handles.displaydata{3} = data;
+end
+guidata(hObject, handles);
