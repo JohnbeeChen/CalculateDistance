@@ -156,44 +156,99 @@ end
 [filename, pathname] = uigetfile( ...
     {'*.zip;*.roi', 'All zip-Files (*.zip,*.zip)'; ...
     '*.*','All Files (*.*)'}, ...
-    'Select ROI File',pathname);
-roi_filename = fullfile(pathname,filename);
-if filename
-    rois = ReadImageJROI(roi_filename);
-    roi_num = length(rois);
-    box =zeros(roi_num,5);
-    roi_names{1} = [];
-    if roi_num == 1
-        box(1,1:4) = rois.vnRectBounds;
-        box(1,5) = rois.nPositon;
-        roi_names{1} = rois.strName;
-    elseif roi_num > 1
-        for ii = 1:roi_num
-            tem = rois{ii};
-            box(ii,1:4) = tem.vnRectBounds;
-            box(ii,5) = tem.nPosition;
-            roi_names{ii} = tem.strName;
-        end
-    end
-    % changes the format of @box to [x y w h]
-    % notice: the loc in ImageJ start from 0, but Matlab start from 1
-    box(:,[4 3]) = box(:,3:4) - box(:,1:2) - 1;
-    box(:,1:2) = box(:,[2 1]) + 1;
-    idx = box(:,[1 2]) == 0;
-    box(idx) = 1;
-    img_size = size(handles.images(:,:,1));
-    idx = box(:,1) > img_size(2);
-    box(idx) = img_size(2);
-    idx = box(:,2) > img_size(1);
-    box(idx) = img_size(1);
-    
-    handles.roiboxs = box;
-    handles.roi_names = roi_names;
-    AddRectagle(handles.axes1,box);
-    guidata(hObject,handles);
-else
-    
+    'Select ROI File',pathname,'MultiSelect','on');
+if isequal([filename,pathname],[0,0])
+    disp('file path is not correct!');
+    return
 end
+roi_set_num = length(filename);
+roi_set = cell(roi_set_num,1);
+roi_name_set = cell(roi_set_num,1);
+for ii = 1:roi_set_num
+    full_filename = fullfile(pathname,filename{ii});
+    if full_filename
+        rois = ReadImageJROI(full_filename);
+        roi_num = length(rois);
+        box =zeros(roi_num,5);
+        roi_names= cell(1,roi_num);
+        if roi_num == 1
+            box(1,1:4) = rois.vnRectBounds;
+            box(1,5) = rois.nPositon;
+            roi_names{1} = rois.strName;
+        elseif roi_num > 1
+            for jj = 1:roi_num
+                tem = rois{jj};
+                box(jj,1:4) = tem.vnRectBounds;
+                box(jj,5) = tem.nPosition;
+                roi_names{jj} = tem.strName;
+            end
+        end
+        % changes the format of @box to [x y w h]
+        % notice: the loc in ImageJ start from 0, but Matlab start from 1
+        box(:,[4 3]) = box(:,3:4) - box(:,1:2) - 1;
+        box(:,1:2) = box(:,[2 1]) + 1;
+        idx = box(:,[1 2]) == 0;
+        box(idx) = 1;
+        img_size = size(handles.img_set{ii}(:,:,1));
+        idx = box(:,1) > img_size(2);
+        box(idx) = img_size(2);
+        idx = box(:,2) > img_size(1);
+        box(idx) = img_size(1);
+        
+        roi_set{ii} = box;
+        roi_name_set{ii} = roi_names;
+    end
+end
+
+img = handles.img_set{1}(:,:,1);
+imag_statck_num = handles.imag_statck_num;
+SetAxesImage(handles.axes1,img);
+s = ['1/',num2str(imag_statck_num)];
+SetTextString(handles.text_title,s);
+AddRectagle(handles.axes1,roi_set{1});
+
+handles.img_set_index = 1;
+handles.roi_set = roi_set;
+handles.roi_name_set = roi_name_set;
+
+guidata(hObject,handles);
+% roi_filename = fullfile(pathname,filename);
+% if filename
+%     rois = ReadImageJROI(roi_filename);
+%     roi_num = length(rois);
+%     box =zeros(roi_num,5);
+%     roi_names{1} = [];
+%     if roi_num == 1
+%         box(1,1:4) = rois.vnRectBounds;
+%         box(1,5) = rois.nPositon;
+%         roi_names{1} = rois.strName;
+%     elseif roi_num > 1
+%         for ii = 1:roi_num
+%             tem = rois{ii};
+%             box(ii,1:4) = tem.vnRectBounds;
+%             box(ii,5) = tem.nPosition;
+%             roi_names{ii} = tem.strName;
+%         end
+%     end
+%     % changes the format of @box to [x y w h]
+%     % notice: the loc in ImageJ start from 0, but Matlab start from 1
+%     box(:,[4 3]) = box(:,3:4) - box(:,1:2) - 1;
+%     box(:,1:2) = box(:,[2 1]) + 1;
+%     idx = box(:,[1 2]) == 0;
+%     box(idx) = 1;
+%     img_size = size(handles.images(:,:,1));
+%     idx = box(:,1) > img_size(2);
+%     box(idx) = img_size(2);
+%     idx = box(:,2) > img_size(1);
+%     box(idx) = img_size(1);
+%     
+%     handles.roiboxs = box;
+%     handles.roi_names = roi_names;
+%     AddRectagle(handles.axes1,box);
+%     guidata(hObject,handles);
+% else
+%     
+% end
 
 
 % --- Executes on button press in btn_zprofile.
@@ -255,9 +310,13 @@ index = handles.img_set_index;
 if index > 1
     index = index - 1;
     img = handles.img_set{index};
-    PlotAxes(handles.axes1,img(:,:,1));
+    SetAxesImage(handles.axes1,img(:,:,1));
     s = [num2str(index),'/',num2str(handles.imag_statck_num)];
-    SetText(handles.text_title,s);
+    SetTextString(handles.text_title,s);
+    if isfield(handles,'roi_set')
+        box = handles.roi_set{index};
+        AddRectagle(handles.axes1,box);
+    end
     handles.img_set_index = index;
     guidata(hObject, handles);
 end
@@ -276,9 +335,12 @@ if index < handles.imag_statck_num
     index = index + 1;
     img = handles.img_set{index};
     SetAxesImage(handles.axes1,img(:,:,1));
-%     PlotAxes(handles.axes1,img(:,:,1));
     s = [num2str(index),'/',num2str(handles.imag_statck_num)];
     SetTextString(handles.text_title,s);
+    if isfield(handles,'roi_set')
+        box = handles.roi_set{index};
+        AddRectagle(handles.axes1,box);
+    end
     handles.img_set_index = index;
     guidata(hObject, handles);
 end
