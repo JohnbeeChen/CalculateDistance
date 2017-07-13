@@ -150,7 +150,7 @@ if ~isfield(handles,'distance')
    return;
 end
 prompt={'distance threshold(nm):'};
-defaults={num2str(32.5)};
+defaults={num2str(30)};
 info = inputdlg(prompt, 'Input for process...!', 1, defaults);
 if ~isempty(info)
     level = str2double(info(1));

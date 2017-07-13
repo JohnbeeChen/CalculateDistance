@@ -22,7 +22,7 @@ function varargout = MainForm(varargin)
 
 % Edit the above text to modify the response to help MainForm
 
-% Last Modified by GUIDE v2.5 06-Jul-2017 20:22:52
+% Last Modified by GUIDE v2.5 13-Jul-2017 17:10:07
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -94,25 +94,32 @@ end
 [filename, pathname] = uigetfile( ...
     {'*.tif;*.tiff', 'All TIF-Files (*.tif,*.tiff)'; ...
     '*.*','All Files (*.*)'}, ...
-    'Select Image File',pathname);
+    'Select Image File',pathname,'MultiSelect','on');
 if isequal([filename,pathname],[0,0])
+    disp('file path is not correct!');
     return
-else
-    File = fullfile(pathname,filename);
-    handles.File=File;
-    if filename
-        t=strfind(filename,'.tif');
-        filebase=filename(1:t-1);
-        handles.filebase = filebase;
-        %         handles.pathname = pathname;
+end
+imag_statck_num = length(filename);
+img_set = cell(1,imag_statck_num);
+for ii = 1:imag_statck_num
+    full_filename = fullfile(pathname,filename{ii});
+    if full_filename
+        img_set{ii} = imreadstack_TIRF(full_filename,1);
     end
 end
-% [handles.images,handles.ImageNumber]=tiffread(File);
-handles.images = imreadstack_TIRF(File,1);
-SetAxesImage(handles.axes1,handles.images(:,:,1));
+
+SetAxesImage(handles.axes1,img_set{1}(:,:,1));
+s = ['1/',num2str(imag_statck_num)];
+SetTextString(handles.text_title,s);
+handles.img_set = img_set;
+handles.img_set_index = 1;
+handles.imag_statck_num = imag_statck_num;
 guidata(hObject,handles);
 save('lastfile.mat','pathname','filename');
 
+
+function SetTextString(myText,s)
+set(myText,'String',s);
 
 function SetAxesImage(myAxes,myImages)
 set(myAxes,'visible','on');
@@ -171,14 +178,14 @@ if filename
     % changes the format of @box to [x y w h]
     % notice: the loc in ImageJ start from 0, but Matlab start from 1
     box(:,[4 3]) = box(:,3:4) - box(:,1:2) - 1;
-    box(:,1:2) = box(:,[2 1]) + 1; 
+    box(:,1:2) = box(:,[2 1]) + 1;
     idx = box(:,[1 2]) == 0;
     box(idx) = 1;
     img_size = size(handles.images(:,:,1));
     idx = box(:,1) > img_size(2);
     box(idx) = img_size(2);
     idx = box(:,2) > img_size(1);
-    box(idx) = img_size(1);    
+    box(idx) = img_size(1);
     
     handles.roiboxs = box;
     handles.roi_names = roi_names;
@@ -216,11 +223,11 @@ for ii = 1:len
     if event_loc == 1
         event_duration = 1:3;
     elseif event_loc == img_num
-        event_duration = (img_num-2):img_num;       
+        event_duration = (img_num-2):img_num;
     else
         event_duration = (event_loc-1):(event_loc+1);
     end
-   
+    
     event_frams = imgSIM(:,:,event_duration);
     %selects the roi region in @event_fram
     tem_box = boxs(ii,:);
@@ -233,3 +240,45 @@ guidata(hObject,handles);
 col_name = {'centroid_x','centroid_y'};
 row_name = handles.roi_names;
 FormTable(centroids,boxs(:,5),col_name,row_name);
+
+
+% --- Executes on button press in btn_previous.
+function btn_previous_Callback(hObject, eventdata, handles)
+% hObject    handle to btn_previous (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if ~isfield(handles,'img_set')
+    disp('Please read images firstly!');
+    return;
+end
+index = handles.img_set_index;
+if index > 1
+    index = index - 1;
+    img = handles.img_set{index};
+    PlotAxes(handles.axes1,img(:,:,1));
+    s = [num2str(index),'/',num2str(handles.imag_statck_num)];
+    SetText(handles.text_title,s);
+    handles.img_set_index = index;
+    guidata(hObject, handles);
+end
+
+% --- Executes on button press in btn_next.
+function btn_next_Callback(hObject, eventdata, handles)
+% hObject    handle to btn_next (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if ~isfield(handles,'img_set')
+    disp('Please read images firstly!');
+    return;
+end
+index = handles.img_set_index;
+if index < handles.imag_statck_num
+    index = index + 1;
+    img = handles.img_set{index};
+    SetAxesImage(handles.axes1,img(:,:,1));
+%     PlotAxes(handles.axes1,img(:,:,1));
+    s = [num2str(index),'/',num2str(handles.imag_statck_num)];
+    SetTextString(handles.text_title,s);
+    handles.img_set_index = index;
+    guidata(hObject, handles);
+end
