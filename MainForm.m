@@ -22,7 +22,7 @@ function varargout = MainForm(varargin)
 
 % Edit the above text to modify the response to help MainForm
 
-% Last Modified by GUIDE v2.5 13-Jul-2017 17:10:07
+% Last Modified by GUIDE v2.5 14-Jul-2017 14:08:23
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -238,7 +238,10 @@ function btn_findparticles_Callback(hObject, eventdata, handles)
 % hObject    handle to btn_findparticles (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+if ~isfield(handles,'roi_set')
+    disp('Please read roi files firstly!');
+    return;
+end
 img_set_index = handles.img_set_index;
 boxs = handles.roi_set{img_set_index};
 imgSIM = handles.img_set{img_set_index};
@@ -315,3 +318,58 @@ if index < handles.imag_statck_num
     handles.img_set_index = index;
     guidata(hObject, handles);
 end
+
+
+% --- Executes on button press in bty_find_all.
+function bty_find_all_Callback(hObject, eventdata, handles)
+% hObject    handle to bty_find_all (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if ~isfield(handles,'roi_set')
+    disp('Please read roi files firstly!');
+    return;
+end
+img_set = handles.img_set;
+roi_set = handles.roi_set;
+img_set_num = length(img_set);
+centroid_set{img_set_num,1} = [];
+for idex = 1:img_set_num
+    img_set_index = idex;
+    boxs = roi_set{img_set_index};
+    imgSIM = img_set{img_set_index};
+    len = size(boxs,1);
+    img_num = size(imgSIM,3);
+    centroid(len,2) = 0;
+    for ii = 1:len
+        event_loc = boxs(ii,5);
+        if event_loc == 1
+            event_duration = 1:3;
+        elseif event_loc == img_num
+            event_duration = (img_num-2):img_num;
+        else
+            event_duration = (event_loc-1):(event_loc+1);
+        end
+        
+        event_frams = imgSIM(:,:,event_duration);
+        %selects the roi region in @event_fram
+        tem_box = boxs(ii,:);
+        event_frams_roi = KeepROI(event_frams,tem_box);
+        centroid(ii,:) = GetCentroid(event_frams_roi);
+    end
+    centroid_set{idex} = centroid + boxs(:,1:2);  
+    clear centroid;
+end
+col_name = {'centroid_x','centroid_y'}; 
+centroids = cell2mat(centroid_set);
+boxs = cell2mat(roi_set);
+
+tem = handles.roi_name_set;
+len = length(tem);
+row_names = tem{1};
+for ii = 2:len
+    row_names = [row_names tem{ii}];
+end
+
+FormTable(centroids,boxs(:,5),col_name,row_names);
+handles.all_centroids = centroids;
+guidata(hObject,handles);
