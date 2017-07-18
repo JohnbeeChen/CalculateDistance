@@ -181,9 +181,9 @@ for ii = 1:roi_set_num
     box =zeros(roi_num,5);
     roi_names= cell(1,roi_num);
     if roi_num == 1
-        box(1,1:4) = rois.vnRectBounds;
-        box(1,5) = rois.nPosition;
-        roi_names{1} = rois.strName;
+        box(1,1:4) = rois{1}.vnRectBounds;
+        box(1,5) = rois{1}.nPosition;
+        roi_names{1} = rois{1}.strName;
     elseif roi_num > 1
         for jj = 1:roi_num
             tem = rois{jj};
@@ -354,12 +354,14 @@ for idex = 1:img_set_num
         %selects the roi region in @event_fram
         tem_box = boxs(ii,:);
         event_frams_roi = KeepROI(event_frams,tem_box);
-        centroid(ii,:) = GetCentroid(event_frams_roi);
-    end
-    centroid_set{idex} = centroid + boxs(:,1:2);  
+        centroid(ii,1:2) = GetCentroid(event_frams_roi);
+    end  
+    tem = centroid + boxs(:,1:2);  
+    tem(:,3) = idex;
+    centroid_set{idex} = tem;
     clear centroid;
 end
-col_name = {'centroid_x','centroid_y'}; 
+col_name = {'centroid_x','centroid_y','event_order'}; 
 centroids = cell2mat(centroid_set);
 boxs = cell2mat(roi_set);
 
@@ -371,5 +373,20 @@ for ii = 2:len
 end
 
 FormTable(centroids,boxs(:,5),col_name,row_names);
+figure
+event_num = img_set_num;
+legend_name{img_set_num} = [];
+for ii = 1:event_num
+idx = centroids(:,3) == ii;
+x = centroids(idx,1);
+y = centroids(idx,2);
+plot(32.5*x,32.5*y,'*');    
+hold on   
+legend_name{ii} = ['Event ',num2str(ii)];
+end
+hold off
+grid minor;
+legend(legend_name);
+xlabel 'x/nm',ylabel 'y/nm';
 handles.all_centroids = centroids;
 guidata(hObject,handles);
