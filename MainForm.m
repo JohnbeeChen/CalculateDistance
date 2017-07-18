@@ -382,7 +382,7 @@ x = centroids(idx,1);
 y = centroids(idx,2);
 plot(32.5*x,32.5*y,'*');    
 hold on   
-legend_name{ii} = ['Event ',num2str(ii)];
+legend_name{ii} = ['nanospark ',num2str(ii)];
 end
 hold off
 grid minor;

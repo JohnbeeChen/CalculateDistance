@@ -99,7 +99,10 @@ end
 rawdata = handles.rawdata;
 len = size(rawdata,1);
 ds = zeros(len,len);
+tem = len*(len - 1)/1;
+% hist_data = zeros(1,tem);
 fram_index = handles.fram_index;
+kk = 1;
 for ii = 1:len
     point_one = rawdata(ii,:);
     for jj = 1:len
@@ -108,14 +111,21 @@ for ii = 1:len
         else
             point_two = rawdata(jj,:);
             ds(ii,jj) = pixesize*GetDistance(point_one,point_two);
-        end
+            if ii~=jj                
+                hist_data(kk) = ds(ii,jj);
+                kk = kk+1;
+            end
+        end       
    end    
 end
 set(handles.uitable1,'ColumnName',handles.row_name,'Data',ds);
+figure 
+histogram(hist_data,40);
+
 handles.distance = ds;
 handles.displaydata{2} = ds;
 guidata(hObject, handles);
-
+grid minor;
 function y = GetDistance(pointOne, pointTwo)
 t = (pointOne - pointTwo).^2;
 t = sum(t);
