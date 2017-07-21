@@ -105,18 +105,29 @@ fram_index = handles.fram_index;
 kk = 1;
 for ii = 1:len
     point_one = rawdata(ii,:);
+    min_distance = 1000;
     for jj = 1:len
+        point_two = rawdata(jj,:);
+        tem_ds = pixesize*GetDistance(point_one,point_two);
+        if ii ~= jj
+            if(tem_ds < min_distance)
+                min_distance = tem_ds;
+            end
+        end
+        
         if ii<jj
             ds(ii,jj) = fram_index(jj) - fram_index(ii);
         else
-            point_two = rawdata(jj,:);
-            ds(ii,jj) = pixesize*GetDistance(point_one,point_two);
-            if ii~=jj                
-                hist_data(kk) = ds(ii,jj);
-                kk = kk+1;
-            end
+            ds(ii,jj) = tem_ds;
+%             if ii~=jj   
+%                 if(ds(ii,jj) < min_distance)
+%                     min_distance = ds(ii,jj);
+%                 end
+%             end
         end       
-   end    
+    end  
+    hist_data(kk) = min_distance;
+    kk = kk+1;
 end
 set(handles.uitable1,'ColumnName',handles.row_name,'Data',ds);
 figure 
@@ -126,6 +137,7 @@ handles.distance = ds;
 handles.displaydata{2} = ds;
 guidata(hObject, handles);
 grid minor;
+
 function y = GetDistance(pointOne, pointTwo)
 t = (pointOne - pointTwo).^2;
 t = sum(t);
