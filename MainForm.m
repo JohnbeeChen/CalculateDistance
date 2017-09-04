@@ -331,7 +331,7 @@ if ~isfield(handles,'roi_set')
 end
 img_set = handles.img_set;
 roi_set = handles.roi_set;
-img_set_num = length(img_set);
+img_set_num = handles.imag_statck_num;
 centroid_set{img_set_num,1} = [];
 for idex = 1:img_set_num
     img_set_index = idex;
@@ -339,7 +339,7 @@ for idex = 1:img_set_num
     imgSIM = img_set{img_set_index};
     len = size(boxs,1);
     img_num = size(imgSIM,3);
-    centroid(len,2) = 0;
+%     centroid(len,2) = 0;
     for ii = 1:len
         event_loc = boxs(ii,5);
         if event_loc == 1
@@ -373,20 +373,21 @@ for ii = 2:len
 end
 
 FormTable(centroids,boxs(:,5),col_name,row_names);
-figure
-event_num = img_set_num;
-legend_name{img_set_num} = [];
-for ii = 1:event_num
-idx = centroids(:,3) == ii;
-x = centroids(idx,1);
-y = centroids(idx,2);
-plot(32.5*x,32.5*y,'*');    
-hold on   
-legend_name{ii} = ['nanospark ',num2str(ii)];
-end
-hold off
-grid minor;
-legend(legend_name);
-xlabel 'x/nm',ylabel 'y/nm';
+% figure
+% event_num = img_set_num;
+% legend_name{img_set_num} = [];
+% for ii = 1:event_num
+% idx = centroids(:,3) == ii;
+% x = centroids(idx,1);
+% y = centroids(idx,2);
+% plot(32.5*x,32.5*y,'*');    
+% hold on   
+% legend_name{ii} = ['nanospark ',num2str(ii)];
+% end
+% hold off
+% grid minor;
+% legend(legend_name);
+% xlabel 'x/nm',ylabel 'y/nm';
+
 handles.all_centroids = centroids;
 guidata(hObject,handles);

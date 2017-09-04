@@ -54,6 +54,9 @@ Temporary Items
 *.asv
 *.doc
 *.docx
+*.doc
+*.xls
+*.xlsx
 *.mat
 *.zip
 *.7z

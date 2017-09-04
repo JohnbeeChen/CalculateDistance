@@ -22,7 +22,7 @@ function varargout = FormTable(varargin)
 
 % Edit the above text to modify the response to help FormTable
 
-% Last Modified by GUIDE v2.5 13-Jul-2017 09:03:45
+% Last Modified by GUIDE v2.5 24-Aug-2017 08:52:11
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -119,24 +119,45 @@ for ii = 1:len
             ds(ii,jj) = fram_index(jj) - fram_index(ii);
         else
             ds(ii,jj) = tem_ds;
-%             if ii~=jj   
-%                 if(ds(ii,jj) < min_distance)
-%                     min_distance = ds(ii,jj);
-%                 end
-%             end
-        end       
-    end  
+            %             if ii~=jj
+            %                 if(ds(ii,jj) < min_distance)
+            %                     min_distance = ds(ii,jj);
+            %                 end
+            %             end
+        end
+    end
     hist_data(kk) = min_distance;
     kk = kk+1;
 end
 set(handles.uitable1,'ColumnName',handles.row_name,'Data',ds);
-figure 
+figure
 histogram(hist_data,40);
 
+handles.nearestdistance = hist_data';
 handles.distance = ds;
 handles.displaydata{2} = ds;
 guidata(hObject, handles);
 grid minor;
+
+figure
+if size(rawdata,3) == 1
+    rawdata(:,3) = 1;
+end
+event_num = max(rawdata(:,3));
+legend_name{event_num} = [];
+for ii = 1:event_num
+    idx = rawdata(:,3) == ii;
+    point_set_loc =pixesize * rawdata(idx,1:2);
+    
+    plot(point_set_loc(:,1),point_set_loc(:,2),'*');
+    hold on
+    legend_name{ii} = ['nanospark ',num2str(ii)];
+end
+hold off
+grid minor;
+legend(legend_name);
+xlabel 'x/nm',ylabel 'y/nm';
+
 
 function y = GetDistance(pointOne, pointTwo)
 t = (pointOne - pointTwo).^2;
@@ -156,9 +177,9 @@ if index && strcmp(fName(end-4:end),'.xlsx')
     data_excel(1,2:end) = get(handles.uitable1,'ColumnName');
     data_excel(2:end,1) = get(handles.uitable1,'RowName');
     data_excel(2:end,2:end) = num2cell(data);
-    xlswrite(str,data_excel);   
+    xlswrite(str,data_excel);
 else
-   disp('file path is not correct');    
+    disp('file path is not correct');
 end
 
 
@@ -168,26 +189,67 @@ function btn_select_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 if ~isfield(handles,'distance')
-   disp('please analysis firstly');
-   return;
+    disp('please analysis firstly');
+    return;
 end
-prompt={'distance threshold(nm):'};
+prompt={'distance threshold (nm):'};
 defaults={num2str(30)};
 info = inputdlg(prompt, 'Input for process...!', 1, defaults);
 if ~isempty(info)
     level = str2double(info(1));
     data = handles.distance;
     len = length(data);
-    for ii = 2:len       
-       for jj = 1:(ii-1)
-           %the distance less than the @level
-           if data(ii,jj)>level
-               data(ii,jj) = 0;
-           end
-       end
+    for ii = 2:len
+        for jj = 1:(ii-1)
+            %the distance less than the @level
+            if data(ii,jj)>level
+                data(ii,jj) = 0;
+            end
+        end
     end
     set(handles.uitable1,'Data',data);
     handles.select_data = data;
     handles.displaydata{3} = data;
 end
 guidata(hObject, handles);
+
+
+% --- Executes on button press in btn_savenearestdistance.
+function btn_savenearestdistance_Callback(hObject, eventdata, handles)
+% hObject    handle to btn_savenearestdistance (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if ~isfield(handles,'nearestdistance');
+    disp('the nearest distance does not exist');
+end
+[fName,pName,index] = uiputfile('*.xlsx','Save as','nearest_disance.xlsx');
+if index && strcmp(fName(end-4:end),'.xlsx')
+    str = [pName fName];
+    data = handles.nearestdistance;
+    %     data_excel = cell(size(data,1) + 1, size(data,2) + 1);
+    %     data_excel(1,2:end) = get(handles.uitable1,'ColumnName');
+    %     data_excel(2:end,1) = get(handles.uitable1,'RowName');
+    %     data_excel(2:end,2:end) = num2cell(data);
+    xlswrite(str,data);
+else
+    disp('file path is not correct');
+end
+
+
+% --- Executes on button press in btn_assort.
+function btn_assort_Callback(hObject, eventdata, handles)
+% hObject    handle to btn_assort (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if ~isfield(handles,'distance')
+    disp('please analysis firstly');
+    return;
+end
+prompt={'threshold1 (nm):','threshold2 (nm):'};
+defaults={num2str(0),num2str(0)};
+info = inputdlg(prompt, 'Input for process...!', 1, defaults);
+if ~isempty(info)
+    thrd1 = str2double(info(1));
+    thrd2 = str2double(info(2));
+    %     data = handles.distance;
+end
