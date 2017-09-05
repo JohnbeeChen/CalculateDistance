@@ -373,21 +373,5 @@ for ii = 2:len
 end
 
 FormTable(centroids,boxs(:,5),col_name,row_names);
-% figure
-% event_num = img_set_num;
-% legend_name{img_set_num} = [];
-% for ii = 1:event_num
-% idx = centroids(:,3) == ii;
-% x = centroids(idx,1);
-% y = centroids(idx,2);
-% plot(32.5*x,32.5*y,'*');    
-% hold on   
-% legend_name{ii} = ['nanospark ',num2str(ii)];
-% end
-% hold off
-% grid minor;
-% legend(legend_name);
-% xlabel 'x/nm',ylabel 'y/nm';
-
 handles.all_centroids = centroids;
 guidata(hObject,handles);

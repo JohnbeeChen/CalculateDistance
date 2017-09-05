@@ -140,7 +140,7 @@ guidata(hObject, handles);
 grid minor;
 
 figure
-if size(rawdata,3) == 1
+if size(rawdata,2) == 2
     rawdata(:,3) = 1;
 end
 event_num = max(rawdata(:,3));
