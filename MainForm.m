@@ -22,7 +22,7 @@ function varargout = MainForm(varargin)
 
 % Edit the above text to modify the response to help MainForm
 
-% Last Modified by GUIDE v2.5 14-Jul-2017 14:08:23
+% Last Modified by GUIDE v2.5 05-Sep-2017 14:25:00
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -319,7 +319,6 @@ if index < handles.imag_statck_num
     guidata(hObject, handles);
 end
 
-
 % --- Executes on button press in bty_find_all.
 function bty_find_all_Callback(hObject, eventdata, handles)
 % hObject    handle to bty_find_all (see GCBO)
@@ -339,7 +338,7 @@ for idex = 1:img_set_num
     imgSIM = img_set{img_set_index};
     len = size(boxs,1);
     img_num = size(imgSIM,3);
-%     centroid(len,2) = 0;
+    %     centroid(len,2) = 0;
     for ii = 1:len
         event_loc = boxs(ii,5);
         if event_loc == 1
@@ -355,13 +354,16 @@ for idex = 1:img_set_num
         tem_box = boxs(ii,:);
         event_frams_roi = KeepROI(event_frams,tem_box);
         centroid(ii,1:2) = GetCentroid(event_frams_roi);
-    end  
-    tem = centroid + boxs(:,1:2);  
+    end
+    tem_index = 1:len;
+    tem = centroid + boxs(:,1:2);
     tem(:,3) = idex;
+    tem = [tem tem_index'];
     centroid_set{idex} = tem;
     clear centroid;
 end
-col_name = {'centroid_x','centroid_y','event_order'}; 
+col_name = {'centroid_x','centroid_y','event_order','order'};
+%centroids[centroids_x,centroids_y,roi_set index, index in roi_set{ii}]
 centroids = cell2mat(centroid_set);
 boxs = cell2mat(roi_set);
 
@@ -375,3 +377,46 @@ end
 FormTable(centroids,boxs(:,5),col_name,row_names);
 handles.all_centroids = centroids;
 guidata(hObject,handles);
+
+
+% --- Executes on button press in btn_Assort.
+function btn_Assort_Callback(hObject, eventdata, handles)
+% hObject    handle to btn_Assort (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if ~isfield(handles,'all_centroids')
+    disp('Press the FindAllParticles button firstly, please!');
+    return;
+end
+centroids = handles.all_centroids;
+centroids_num = size(centroids,1);
+dis = zeros(centroids_num);
+thrd1 = 18; %the first threshold(per nanometer)
+ii = 1;
+while 1
+    centroids_num = size(centroids,1);
+    if ii < centroids_num
+        point_one = centroids(ii,:);
+        jj = ii+1;
+        while 1
+            tem_len = size(centroids,1);
+            if jj > tem_len
+               break; 
+            end
+            point_two = centroids(jj,:);
+            tem_point = point_two(1:2) - point_one(1:2);
+            distance = 32.5*sqrt(tem_point*tem_point');
+            if distance <= thrd1
+                centroids(jj,:) =[];%delet the same point 
+            else
+                jj = jj + 1;
+            end
+        end
+        ii = ii + 1;
+    else
+        break;
+    end
+    
+end
+
+jj = 0;

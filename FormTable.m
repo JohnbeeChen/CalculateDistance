@@ -22,7 +22,7 @@ function varargout = FormTable(varargin)
 
 % Edit the above text to modify the response to help FormTable
 
-% Last Modified by GUIDE v2.5 24-Aug-2017 08:52:11
+% Last Modified by GUIDE v2.5 05-Sep-2017 16:41:14
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -104,10 +104,10 @@ tem = len*(len - 1)/1;
 fram_index = handles.fram_index;
 kk = 1;
 for ii = 1:len
-    point_one = rawdata(ii,:);
+    point_one = rawdata(ii,1:2);
     min_distance = 1000;
     for jj = 1:len
-        point_two = rawdata(jj,:);
+        point_two = rawdata(jj,1:2);
         tem_ds = pixesize*GetDistance(point_one,point_two);
         if ii ~= jj
             if(tem_ds < min_distance)
@@ -119,11 +119,6 @@ for ii = 1:len
             ds(ii,jj) = fram_index(jj) - fram_index(ii);
         else
             ds(ii,jj) = tem_ds;
-            %             if ii~=jj
-            %                 if(ds(ii,jj) < min_distance)
-            %                     min_distance = ds(ii,jj);
-            %                 end
-            %             end
         end
     end
     hist_data(kk) = min_distance;
@@ -160,9 +155,10 @@ xlabel 'x/nm',ylabel 'y/nm';
 
 
 function y = GetDistance(pointOne, pointTwo)
-t = (pointOne - pointTwo).^2;
-t = sum(t);
-y = sqrt(t);
+t = pointOne - pointTwo;
+y = sqrt(t*t');
+% t = sum(t);
+% y = sqrt(t);
 
 % --- Executes on button press in btn_saveexcel.
 function btn_saveexcel_Callback(hObject, eventdata, handles)
@@ -219,7 +215,7 @@ function btn_savenearestdistance_Callback(hObject, eventdata, handles)
 % hObject    handle to btn_savenearestdistance (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-if ~isfield(handles,'nearestdistance');
+if ~isfield(handles,'nearestdistance')
     disp('the nearest distance does not exist');
 end
 [fName,pName,index] = uiputfile('*.xlsx','Save as','nearest_disance.xlsx');
