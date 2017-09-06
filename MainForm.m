@@ -353,16 +353,19 @@ for idex = 1:img_set_num
         %selects the roi region in @event_fram
         tem_box = boxs(ii,:);
         event_frams_roi = KeepROI(event_frams,tem_box);
+        fit_imgs_weight = sum(event_frams_roi(:));
         centroid(ii,1:2) = GetCentroid(event_frams_roi);
+        centroid(ii,5) = fit_imgs_weight;
     end
     tem_index = 1:len;
-    tem = centroid + boxs(:,1:2);
+    tem = centroid(:,1:2) + boxs(:,1:2);
     tem(:,3) = idex;
     tem = [tem tem_index'];
+    tem(:,5) = centroid(:,5);
     centroid_set{idex} = tem;
     clear centroid;
 end
-col_name = {'centroid_x','centroid_y','event_order','order'};
+col_name = {'centroid_x','centroid_y','event_order','order','intesity sum'};
 %centroids[centroids_x,centroids_y,roi_set index, index in roi_set{ii}]
 centroids = cell2mat(centroid_set);
 boxs = cell2mat(roi_set);
@@ -376,6 +379,7 @@ end
 
 FormTable(centroids,boxs(:,5),col_name,row_names);
 handles.all_centroids = centroids;
+handles.fit_imgs_weight = fit_imgs_weight;
 guidata(hObject,handles);
 
 
@@ -390,8 +394,9 @@ if ~isfield(handles,'all_centroids')
 end
 centroids = handles.all_centroids;
 centroids_num = size(centroids,1);
-dis = zeros(centroids_num);
+% dis = zeros(centroids_num);
 thrd1 = 18; %the first threshold(per nanometer)
+pixe_size = 32.5;
 ii = 1;
 while 1
     centroids_num = size(centroids,1);
@@ -404,9 +409,19 @@ while 1
                break; 
             end
             point_two = centroids(jj,:);
+            %notice: calculate the 
             tem_point = point_two(1:2) - point_one(1:2);
-            distance = 32.5*sqrt(tem_point*tem_point');
+            distance = pixe_size * sqrt(tem_point*tem_point');
             if distance <= thrd1
+                weight1 = point_one(5);
+                weight2 = point_two(5);
+                w = [weight1,weight2];
+                p = [point_one(1:2);point_two(1:2)];
+                %calculate the new centroids of @point_one and @point_two
+                new_p = (w*p)./(sum(w));
+                point_one(1:2) = new_p;
+                point_one(5) = sum(w);
+                centroids(ii,:) = point_one;
                 centroids(jj,:) =[];%delet the same point 
             else
                 jj = jj + 1;
@@ -415,8 +430,11 @@ while 1
         ii = ii + 1;
     else
         break;
-    end
-    
+    end   
 end
+figure
+plot(pixe_size*centroids(:,1),pixe_size*centroids(:,2),'*');
+xlabel('x/nm');
+ylabel('y.nm');
+grid minor
 
-jj = 0;
