@@ -233,44 +233,6 @@ handles.eventinfo = FormPlot(all_profile);
 guidata(hObject,handles);
 
 
-% --- Executes on button press in btn_findparticles.
-function btn_findparticles_Callback(hObject, eventdata, handles)
-% hObject    handle to btn_findparticles (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-if ~isfield(handles,'roi_set')
-    disp('Please read roi files firstly!');
-    return;
-end
-img_set_index = handles.img_set_index;
-boxs = handles.roi_set{img_set_index};
-imgSIM = handles.img_set{img_set_index};
-len = size(boxs,1);
-img_num = size(imgSIM,3);
-centroids(len,2) = 0;
-for ii = 1:len
-    event_loc = boxs(ii,5);
-    if event_loc == 1
-        event_duration = 1:3;
-    elseif event_loc == img_num
-        event_duration = (img_num-2):img_num;
-    else
-        event_duration = (event_loc-1):(event_loc+1);
-    end
-    
-    event_frams = imgSIM(:,:,event_duration);
-    %selects the roi region in @event_fram
-    tem_box = boxs(ii,:);
-    event_frams_roi = KeepROI(event_frams,tem_box);
-    centroids(ii,:) = GetCentroid(event_frams_roi);
-end
-centroids = centroids + boxs(:,1:2);
-col_name = {'centroid_x','centroid_y'};
-row_name = handles.roi_name_set{img_set_index};
-FormTable(centroids,boxs(:,5),col_name,row_name);
-handles.centroids = centroids;
-guidata(hObject,handles);
-
 % --- Executes on button press in btn_previous.
 function btn_previous_Callback(hObject, eventdata, handles)
 % hObject    handle to btn_previous (see GCBO)
@@ -318,6 +280,54 @@ if index < handles.imag_statck_num
     handles.img_set_index = index;
     guidata(hObject, handles);
 end
+
+% --- Executes on button press in btn_findparticles.
+function btn_findparticles_Callback(hObject, eventdata, handles)
+% hObject    handle to btn_findparticles (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if ~isfield(handles,'roi_set')
+    disp('Please read roi files firstly!');
+    return;
+end
+img_set_index = handles.img_set_index;
+boxs = handles.roi_set{img_set_index};
+imgSIM = handles.img_set{img_set_index};
+len = size(boxs,1);
+img_num = size(imgSIM,3);
+centroids(len,2) = 0;
+for ii = 1:len
+    event_loc = boxs(ii,5);
+    if event_loc == 1
+        event_duration = 1:3;
+    elseif event_loc == img_num
+        event_duration = (img_num-2):img_num;
+    else
+        event_duration = (event_loc-1):(event_loc+1);
+    end
+    
+    event_frams = imgSIM(:,:,event_duration);
+    %selects the roi region in @event_fram
+    tem_box = boxs(ii,:);
+    event_frams_roi = KeepROI(event_frams,tem_box);
+    centroids(ii,:) = GetCentroid(event_frams_roi);
+    fit_imgs_weight = sum(event_frams_roi(:));
+    centroid(ii,5) = fit_imgs_weight;
+    
+end
+tem_index = 1:len;
+tem = centroid(:,1:2) + boxs(:,1:2);
+tem(:,3) = 1;
+tem = [tem tem_index'];
+tem(:,5) = centroid(:,5);
+centroids = tem;
+% centroids = centroids + boxs(:,1:2);
+col_name = {'centroid_x','centroid_y','event_order','order','intesity sum'};
+row_name = handles.roi_name_set{img_set_index};
+FormTable(centroids,boxs(:,5),col_name,row_name);
+
+handles.centroids = centroids;
+guidata(hObject,handles);
 
 % --- Executes on button press in bty_find_all.
 function bty_find_all_Callback(hObject, eventdata, handles)
@@ -406,10 +416,10 @@ while 1
         while 1
             tem_len = size(centroids,1);
             if jj > tem_len
-               break; 
+                break;
             end
             point_two = centroids(jj,:);
-            %notice: calculate the 
+            %notice: calculate the
             tem_point = point_two(1:2) - point_one(1:2);
             distance = pixe_size * sqrt(tem_point*tem_point');
             if distance <= thrd1
@@ -422,7 +432,7 @@ while 1
                 point_one(1:2) = new_p;
                 point_one(5) = sum(w);
                 centroids(ii,:) = point_one;
-                centroids(jj,:) =[];%delet the same point 
+                centroids(jj,:) =[];%delet the same point
             else
                 jj = jj + 1;
             end
@@ -430,7 +440,7 @@ while 1
         ii = ii + 1;
     else
         break;
-    end   
+    end
 end
 figure
 plot(pixe_size*centroids(:,1),pixe_size*centroids(:,2),'*');
@@ -438,3 +448,23 @@ xlabel('x/nm');
 ylabel('y.nm');
 grid minor
 
+thrd2 = 50;
+figure
+new_centroids_num = size(centroids,1);
+for ii = 1 : new_centroids_num
+    p1 = pixe_size*centroids(ii,1:2);
+    hold on
+    plot(p1(1),p1(2),'b*');
+    for jj = 1:new_centroids_num
+        if ii~=jj           
+            p2 = pixe_size*centroids(jj,1:2);
+            tem_p = p1 - p2;
+            tem_distance = sqrt(tem_p*tem_p');
+            if tem_distance <= thrd2
+                hold on
+                plot([p1(1),p2(1)],[p1(2),p2(2)],'r');
+            end
+        end
+    end
+end
+grid minor
