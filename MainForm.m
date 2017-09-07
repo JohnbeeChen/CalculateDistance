@@ -468,3 +468,4 @@ for ii = 1 : new_centroids_num
     end
 end
 grid minor
+save('centroids.mat','centroids');
