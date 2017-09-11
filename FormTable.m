@@ -152,7 +152,8 @@ hold off
 grid minor;
 legend(legend_name);
 xlabel 'x/nm',ylabel 'y/nm';
-
+centroids = pixesize * rawdata(:,1:2);
+save('centroids.mat','centroids');
 
 function y = GetDistance(pointOne, pointTwo)
 t = pointOne - pointTwo;
