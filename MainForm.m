@@ -310,16 +310,15 @@ for ii = 1:len
     %selects the roi region in @event_fram
     tem_box = boxs(ii,:);
     event_frams_roi = KeepROI(event_frams,tem_box);
-    centroids(ii,:) = GetCentroid(event_frams_roi);
-    fit_imgs_weight = sum(event_frams_roi(:));
-    centroid(ii,5) = fit_imgs_weight;
+    [centroids(ii,1:2),fit_imgs_weight] = GetCentroid(event_frams_roi);
+    centroids(ii,5) = fit_imgs_weight;
     
 end
 tem_index = 1:len;
-tem = centroid(:,1:2) + boxs(:,1:2);
+tem = centroids(:,1:2) + boxs(:,1:2);
 tem(:,3) = 1;
 tem = [tem tem_index'];
-tem(:,5) = centroid(:,5);
+tem(:,5) = centroids(:,5);
 centroids = tem;
 % centroids = centroids + boxs(:,1:2);
 col_name = {'centroid_x','centroid_y','event_order','order','intesity sum'};
@@ -363,8 +362,8 @@ for idex = 1:img_set_num
         %selects the roi region in @event_fram
         tem_box = boxs(ii,:);
         event_frams_roi = KeepROI(event_frams,tem_box);
-        fit_imgs_weight = sum(event_frams_roi(:));
-        centroid(ii,1:2) = GetCentroid(event_frams_roi);
+%         fit_imgs_weight = sum(event_frams_roi(:));
+        [centroid(ii,1:2),fit_imgs_weight] = GetCentroid(event_frams_roi);
         centroid(ii,5) = fit_imgs_weight;
     end
     tem_index = 1:len;
@@ -405,8 +404,9 @@ end
 centroids = handles.all_centroids;
 centroids_num = size(centroids,1);
 % dis = zeros(centroids_num);
-thrd1 = 18; %the first threshold(per nanometer)
+thrd1 = 16; %the first threshold(per nanometer)
 pixe_size = 32.5;
+centroids(:,1:2) = pixe_size*centroids(:,1:2);
 ii = 1;
 while 1
     centroids_num = size(centroids,1);
@@ -421,7 +421,7 @@ while 1
             point_two = centroids(jj,:);
             %notice: calculate the
             tem_point = point_two(1:2) - point_one(1:2);
-            distance = pixe_size * sqrt(tem_point*tem_point');
+            distance =   sqrt(tem_point*tem_point');
             if distance <= thrd1
                 weight1 = point_one(5);
                 weight2 = point_two(5);
@@ -443,7 +443,7 @@ while 1
     end
 end
 figure
-plot(pixe_size*centroids(:,1),pixe_size*centroids(:,2),'*');
+plot(centroids(:,1),centroids(:,2),'*');
 xlabel('x/nm');
 ylabel('y.nm');
 grid minor
@@ -452,12 +452,12 @@ thrd2 = 50;
 figure
 new_centroids_num = size(centroids,1);
 for ii = 1 : new_centroids_num
-    p1 = pixe_size*centroids(ii,1:2);
+    p1 = centroids(ii,1:2);
     hold on
     plot(p1(1),p1(2),'b*');
     for jj = 1:new_centroids_num
         if ii~=jj           
-            p2 = pixe_size*centroids(jj,1:2);
+            p2 = centroids(jj,1:2);
             tem_p = p1 - p2;
             tem_distance = sqrt(tem_p*tem_p');
             if tem_distance <= thrd2
@@ -468,4 +468,6 @@ for ii = 1 : new_centroids_num
     end
 end
 grid minor
-% save('centroids.mat','centroids');
+% centroids = centroids;
+save('centroids.mat','centroids');
+clustering

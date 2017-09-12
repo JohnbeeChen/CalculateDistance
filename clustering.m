@@ -4,7 +4,6 @@
 load centroids.mat
 
 cluster_num = 24;
-pixe_size = 32.5;
 X = centroids(:,1:2);
 % figure;
 % plot(X(:,1),X(:,2),'k*','MarkerSize',5);
@@ -15,18 +14,13 @@ figure;
 for ii  = 1:cluster_num
     hold on
     plot(X(idx==ii,1),X(idx==ii,2),'*','MarkerSize',12);
-    hold on
-    plot(C(ii,1),C(ii,2),'kx','MarkerSize',12,'LineWidth',2);
-    hold on
-    circle(C(ii,1),C(ii,2),15);
 end
-
+hold on
+plot(C(:,1),C(:,2),'kx','MarkerSize',12,'LineWidth',2);
+hold on
+circle(C(:,1:2),15);
 hold off
 title(['clusters number: ',num2str(cluster_num),',minimum distance: ',num2str(min_distance)]);
 grid minor
 axis equal
-
-
-function [] = circle(x,y,r)
-rectangle('Position',[x-r,y-r,2*r,2*r],'Curvature',[1,1]);
-end
+save('cluster_centroieds.mat','C');

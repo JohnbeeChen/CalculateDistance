@@ -22,7 +22,7 @@ function varargout = FormTable(varargin)
 
 % Edit the above text to modify the response to help FormTable
 
-% Last Modified by GUIDE v2.5 05-Sep-2017 16:41:14
+% Last Modified by GUIDE v2.5 12-Sep-2017 09:16:17
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -97,9 +97,10 @@ if ~isempty(info)
     pixesize = str2double(info(1));
 end
 rawdata = handles.rawdata;
+rawdata(:,1:2) = pixesize * rawdata(:,1:2);
 len = size(rawdata,1);
 ds = zeros(len,len);
-tem = len*(len - 1)/1;
+% tem = len*(len - 1)/1;
 % hist_data = zeros(1,tem);
 fram_index = handles.fram_index;
 kk = 1;
@@ -108,7 +109,7 @@ for ii = 1:len
     min_distance = 1000;
     for jj = 1:len
         point_two = rawdata(jj,1:2);
-        tem_ds = pixesize*GetDistance(point_one,point_two);
+        tem_ds = GetDistance(point_one,point_two);
         if ii ~= jj
             if(tem_ds < min_distance)
                 min_distance = tem_ds;
@@ -131,6 +132,8 @@ histogram(hist_data,40);
 handles.nearestdistance = hist_data';
 handles.distance = ds;
 handles.displaydata{2} = ds;
+handles.pixe_size = pixesize;
+handles.all_centroids = rawdata;
 guidata(hObject, handles);
 grid minor;
 
@@ -142,7 +145,7 @@ event_num = max(rawdata(:,3));
 legend_name{event_num} = [];
 for ii = 1:event_num
     idx = rawdata(:,3) == ii;
-    point_set_loc =pixesize * rawdata(idx,1:2);
+    point_set_loc = rawdata(idx,1:2);
     
     plot(point_set_loc(:,1),point_set_loc(:,2),'*');
     hold on
@@ -152,7 +155,7 @@ hold off
 grid minor;
 legend(legend_name);
 xlabel 'x/nm',ylabel 'y/nm';
-centroids = pixesize * rawdata(:,1:2);
+centroids = rawdata;
 save('centroids.mat','centroids');
 
 function y = GetDistance(pointOne, pointTwo)
@@ -250,3 +253,35 @@ if ~isempty(info)
     thrd2 = str2double(info(2));
     %     data = handles.distance;
 end
+
+
+% --- Executes on button press in btn_circle.
+function btn_circle_Callback(hObject, eventdata, handles)
+% hObject    handle to btn_circle (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if ~exist('cluster_centroieds.mat','file')
+    disp('clusetring firstly please!');
+    return;
+end
+centroids = handles.all_centroids;
+figure;
+plot(centroids(:,1),centroids(:,2),'*');
+
+load cluster_centroieds.mat;
+hold on
+circle(C(:,1:2),15);
+grid minor;
+point_num = size(centroids,1);
+cluster_num = size(C,1);
+for ii = 1:point_num
+    p1 = centroids(ii,1:2);
+    p1 = p1(ones(cluster_num,1),:);
+    tem = p1 - C;
+    ds = diag(tem*tem');
+    idex = find(ds == min(ds));
+    hold on;
+    circle(C(idex,1:2),15,'r');
+    tem;
+end
+

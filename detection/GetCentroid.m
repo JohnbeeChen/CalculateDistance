@@ -35,3 +35,4 @@ if debug_flag
     plot3(xc,yc,zc,'r*');
 end
 varargout{1} = [xc,yc];
+varargout{2} = mass;
