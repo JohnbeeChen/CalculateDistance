@@ -397,28 +397,29 @@ function btn_Assort_Callback(hObject, eventdata, handles)
 % hObject    handle to btn_Assort (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-if ~isfield(handles,'all_centroids')
-    disp('Press the FindAllParticles button firstly, please!');
-    return;
-end
-centroids = handles.all_centroids;
-centroids_num = size(centroids,1);
+% if ~isfield(handles,'all_centroids')
+%     disp('Press the FindAllParticles button firstly, please!');
+%     return;
+% end
+load all_centroids.mat
+centroids_num = size(all_centroids,1);
 % dis = zeros(centroids_num);
 thrd1 = 16; %the first threshold(per nanometer)
-pixe_size = 32.5;
-centroids(:,1:2) = pixe_size*centroids(:,1:2);
+% load centroids.mat;
+% pixe_size = pixesize;
+all_centroids(:,1:2) = all_centroids(:,1:2);
 ii = 1;
 while 1
-    centroids_num = size(centroids,1);
+    centroids_num = size(all_centroids,1);
     if ii < centroids_num
-        point_one = centroids(ii,:);
+        point_one = all_centroids(ii,:);
         jj = ii+1;
         while 1
-            tem_len = size(centroids,1);
+            tem_len = size(all_centroids,1);
             if jj > tem_len
                 break;
             end
-            point_two = centroids(jj,:);
+            point_two = all_centroids(jj,:);
             %notice: calculate the
             tem_point = point_two(1:2) - point_one(1:2);
             distance =   sqrt(tem_point*tem_point');
@@ -431,8 +432,8 @@ while 1
                 new_p = (w*p)./(sum(w));
                 point_one(1:2) = new_p;
                 point_one(5) = sum(w);
-                centroids(ii,:) = point_one;
-                centroids(jj,:) =[];%delet the same point
+                all_centroids(ii,:) = point_one;
+                all_centroids(jj,:) =[];%delet the same point
             else
                 jj = jj + 1;
             end
@@ -443,21 +444,21 @@ while 1
     end
 end
 figure
-plot(centroids(:,1),centroids(:,2),'*');
+plot(all_centroids(:,1),all_centroids(:,2),'*');
 xlabel('x/nm');
 ylabel('y.nm');
 grid minor
 
 thrd2 = 50;
 figure
-new_centroids_num = size(centroids,1);
+new_centroids_num = size(all_centroids,1);
 for ii = 1 : new_centroids_num
-    p1 = centroids(ii,1:2);
+    p1 = all_centroids(ii,1:2);
     hold on
     plot(p1(1),p1(2),'b*');
     for jj = 1:new_centroids_num
         if ii~=jj           
-            p2 = centroids(jj,1:2);
+            p2 = all_centroids(jj,1:2);
             tem_p = p1 - p2;
             tem_distance = sqrt(tem_p*tem_p');
             if tem_distance <= thrd2
@@ -468,6 +469,6 @@ for ii = 1 : new_centroids_num
     end
 end
 grid minor
-% centroids = centroids;
-save('centroids.mat','centroids');
-clustering
+% all_centroids = all_centroids;
+save('all_centroids.mat','all_centroids');
+% clustering

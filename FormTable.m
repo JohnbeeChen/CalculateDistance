@@ -96,19 +96,19 @@ pixesize = 1;
 if ~isempty(info)
     pixesize = str2double(info(1));
 end
-rawdata = handles.rawdata;
-rawdata(:,1:2) = pixesize * rawdata(:,1:2);
-len = size(rawdata,1);
+centroids = handles.rawdata;
+centroids(:,1:2) = pixesize * centroids(:,1:2);
+len = size(centroids,1);
 ds = zeros(len,len);
 % tem = len*(len - 1)/1;
 % hist_data = zeros(1,tem);
 fram_index = handles.fram_index;
 kk = 1;
 for ii = 1:len
-    point_one = rawdata(ii,1:2);
+    point_one = centroids(ii,1:2);
     min_distance = 1000;
     for jj = 1:len
-        point_two = rawdata(jj,1:2);
+        point_two = centroids(jj,1:2);
         tem_ds = GetDistance(point_one,point_two);
         if ii ~= jj
             if(tem_ds < min_distance)
@@ -126,26 +126,26 @@ for ii = 1:len
     kk = kk+1;
 end
 set(handles.uitable1,'ColumnName',handles.row_name,'Data',ds);
-figure
-histogram(hist_data,40);
-
+% figure
+% histogram(hist_data,40);
+% grid minor;
 handles.nearestdistance = hist_data';
 handles.distance = ds;
 handles.displaydata{2} = ds;
 handles.pixe_size = pixesize;
-handles.all_centroids = rawdata;
+handles.all_centroids = centroids;
 guidata(hObject, handles);
-grid minor;
+
 
 figure
-if size(rawdata,2) == 2
-    rawdata(:,3) = 1;
+if size(centroids,2) == 2
+    centroids(:,3) = 1;
 end
-event_num = max(rawdata(:,3));
+event_num = max(centroids(:,3));
 legend_name{event_num} = [];
 for ii = 1:event_num
-    idx = rawdata(:,3) == ii;
-    point_set_loc = rawdata(idx,1:2);
+    idx = centroids(:,3) == ii;
+    point_set_loc = centroids(idx,1:2);
     
     plot(point_set_loc(:,1),point_set_loc(:,2),'*');
     hold on
@@ -155,8 +155,10 @@ hold off
 grid minor;
 legend(legend_name);
 xlabel 'x/nm',ylabel 'y/nm';
-centroids = rawdata;
-save('centroids.mat','centroids');
+if event_num > 0
+    all_centroids = centroids;
+    save('all_centroids.mat','all_centroids');
+end
 
 function y = GetDistance(pointOne, pointTwo)
 t = pointOne - pointTwo;

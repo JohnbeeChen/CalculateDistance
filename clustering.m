@@ -1,10 +1,17 @@
-%employ kmeans to cluster the RNN acceptor
 
 % close all;
-load centroids.mat
+prompt={'clusters number:'};
+defaults={num2str(4)};
+info = inputdlg(prompt, 'Input for process...!', 1, defaults);
+if ~isempty(info)
+    cluster_num = str2double(info(1));
+else
+   return; 
+end
+load all_centroids.mat
 
-cluster_num = 24;
-X = centroids(:,1:2);
+% cluster_num = 10;
+X = all_centroids(:,1:2);
 % figure;
 % plot(X(:,1),X(:,2),'k*','MarkerSize',5);
 opts = statset('Display','final');
