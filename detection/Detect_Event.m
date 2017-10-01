@@ -1,8 +1,8 @@
 function varargout = Detect_Event(profiles)
 % detect the event of each curve in profiles
 
-display_flag = 0;
-% [num,len] = size(profiles);
+display_flag = 1;
+[num,len] = size(profiles);
 
 % swt_value = My_SWT(profiles,scale);
 swt_value = profiles;

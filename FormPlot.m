@@ -56,16 +56,30 @@ function untitled_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
 if ~isempty(varargin)
     inputdata = varargin{1};
-    num = size(inputdata,1);
-    if num
-        PlotAxes(handles.axes1,inputdata(1,:));
-        s = num2str(num);
-        s = ['1/',s];
-        SetText(handles.text_index,s);
-        handles.index = 1;
-        handles.linenum = num;
-        handles.inputdata = inputdata;
-        handles.plotdata = inputdata;
+    if iscell(inputdata)
+       num = length(inputdata);
+       if num
+           PlotAxes(handles.axes1,inputdata{1})
+           s = num2str(num);
+           s = ['1/',s];
+           SetText(handles.text_index,s);
+           handles.index = 1;
+           handles.linenum = num;
+           handles.inputdata = inputdata;
+           handles.plotdata = inputdata;
+       end
+    else
+        num = size(inputdata,1);
+        if num
+            PlotAxes(handles.axes1,inputdata(1,:));
+            s = num2str(num);
+            s = ['1/',s];
+            SetText(handles.text_index,s);
+            handles.index = 1;
+            handles.linenum = num;
+            handles.inputdata = inputdata;
+            handles.plotdata = inputdata;
+        end
     end
 end
 % Update handles structure

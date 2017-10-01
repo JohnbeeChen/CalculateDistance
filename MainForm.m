@@ -22,7 +22,7 @@ function varargout = MainForm(varargin)
 
 % Edit the above text to modify the response to help MainForm
 
-% Last Modified by GUIDE v2.5 05-Sep-2017 14:25:00
+% Last Modified by GUIDE v2.5 29-Sep-2017 15:41:09
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -227,9 +227,20 @@ function btn_zprofile_Callback(hObject, eventdata, handles)
 % hObject    handle to btn_zprofile (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-boxs = handles.roiboxs;
-all_profile = TIRF_Z_Profile(handles.images,boxs);
-handles.eventinfo = FormPlot(all_profile);
+% box_set = handles.roi_set;
+img_set = handles.img_set;
+stack_num = length(img_set);
+for ii = 1:stack_num
+    %     tem_boxs = box_set{ii};
+    tem_img = img_set{ii};
+    %     box_num = size(tem_boxs,1);
+    %     for jj = 1:box_num
+    profile_set{ii} = Get_Z_Profile(tem_img);
+    %         t = 1;
+    %     end
+end
+% all_profile = TIRF_Z_Profile(handles.images,boxs);
+handles.eventinfo = FormPlot(profile_set);
 guidata(hObject,handles);
 
 
@@ -345,6 +356,8 @@ for idex = 1:img_set_num
     img_set_index = idex;
     boxs = roi_set{img_set_index};
     imgSIM = img_set{img_set_index};
+    %     profiles{idex} = Get_Z_Profile(imgSIM);
+    
     len = size(boxs,1);
     img_num = size(imgSIM,3);
     %     centroid(len,2) = 0;
@@ -362,7 +375,7 @@ for idex = 1:img_set_num
         %selects the roi region in @event_fram
         tem_box = boxs(ii,:);
         event_frams_roi = KeepROI(event_frams,tem_box);
-%         fit_imgs_weight = sum(event_frams_roi(:));
+        %         fit_imgs_weight = sum(event_frams_roi(:));
         [centroid(ii,1:2),fit_imgs_weight] = GetCentroid(event_frams_roi);
         centroid(ii,5) = fit_imgs_weight;
     end
@@ -457,7 +470,7 @@ for ii = 1 : new_centroids_num
     hold on
     plot(p1(1),p1(2),'b*');
     for jj = 1:new_centroids_num
-        if ii~=jj           
+        if ii~=jj
             p2 = all_centroids(jj,1:2);
             tem_p = p1 - p2;
             tem_distance = sqrt(tem_p*tem_p');
@@ -472,3 +485,36 @@ grid minor
 % all_centroids = all_centroids;
 save('all_centroids.mat','all_centroids');
 % clustering
+
+
+% --- Executes on button press in btn_cluster.
+function btn_cluster_Callback(hObject, eventdata, handles)
+% hObject    handle to btn_cluster (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+clustering;
+
+
+% --- Executes on button press in btn_temporal.
+function btn_temporal_Callback(hObject, eventdata, handles)
+% hObject    handle to btn_temporal (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+imgs = handles.img_set;
+scale = 4;
+imgs_num = length(imgs);
+for ii = 1:imgs_num
+    tem_profile = Get_Z_Profile(imgs{ii});    
+    smooth_profile = My_SWT(tem_profile,scale);
+    figure;
+    subplot(2,1,1);
+    plot(tem_profile);
+    subplot(2,1,2);
+    plot(smooth_profile);
+    event_info = Detect_Event(smooth_profile);
+    findpeaks(smooth_profile);
+    t = 1;
+end
+
+
+

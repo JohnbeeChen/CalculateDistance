@@ -5,10 +5,14 @@ function varargout = VectorsFindPeaks(inVectors,minProm)
 %       @event_infos[event_start,event_stop,event_duration]
 
 num = size(inVectors,1);
-
+if ~exist('minProm')
+    minProm = 1;
+end
+    
 for ii = 1 : num
     [pck_infos{ii},event_infos{ii}] = My_FindPeaks(inVectors(ii,:),minProm);
 end
+
 varargout{1} = pck_infos{ii};
 if nargout == 2
     varargout{2} = event_infos{ii};
