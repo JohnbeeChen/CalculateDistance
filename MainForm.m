@@ -501,20 +501,96 @@ function btn_temporal_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 imgs = handles.img_set;
+imgs(cellfun(@isempty,imgs)) = [];
+rois = handles.roi_set;
+rois(cellfun(@isempty,rois)) = [];
 scale = 4;
 imgs_num = length(imgs);
+display_flag = 0;
+kk = 1;
 for ii = 1:imgs_num
-    tem_profile = Get_Z_Profile(imgs{ii});    
+    tem_profile = Get_Z_Profile(imgs{ii});
     smooth_profile = My_SWT(tem_profile,scale);
-    figure;
-    subplot(2,1,1);
-    plot(tem_profile);
-    subplot(2,1,2);
-    plot(smooth_profile);
-    event_info = Detect_Event(smooth_profile);
-    findpeaks(smooth_profile);
-    t = 1;
+    
+    peak_info = Detect_Event(smooth_profile,display_flag);
+    peak_loc{ii} = peak_info(2,:);
+    
+    tem_boxs = rois{ii};
+    tem_img = imgs{ii};
+    box_num = size(tem_boxs,1);
+
+    profile_set = Get_Z_Profile(tem_img,tem_boxs);
+    
+    for jj = 1:box_num
+        tem_roi = tem_boxs(jj,:);
+        roi_loc = tem_roi(5);
+        tem_peak_loc = peak_loc{ii};
+        
+        min_distance_element = GetNearestElement(roi_loc,tem_peak_loc);
+        min_distance_diff = roi_loc - min_distance_element;
+
+        small_trace_smooth = My_SWT(profile_set(jj,:),scale);
+        tem_x = tem_boxs(jj,5);
+        tem_y = small_trace_smooth(tem_x);
+        [~,loc,width,~] = findpeaks(small_trace_smooth,'MinPeakHeight',tem_y - 1);
+        nearest_loc = GetNearestElement(roi_loc,loc);
+        idx = (loc == nearest_loc);
+        width = width(idx);
+        temporal_distance(kk,1) = min_distance_diff(1);
+        temporal_distance(kk,2) = width(1);       
+        
+        kk = kk+1;        
+        
+        if 0
+            figure;
+            plot(small_trace_smooth);
+            hold on
+            plot(tem_x,tem_y,'r*');
+            grid minor;
+            t = 1;
+        end
+    end   
+end
+
+% kk = 1;
+% for ii = 1:imgs_num
+%     tem_roi_set = rois{ii};
+%     roi_num = size(tem_roi_set,1);
+%     for jj = 1:roi_num
+%         tem_roi = tem_roi_set(jj,:);
+%         roi_loc = tem_roi(5);
+%         tem_peak_loc = peak_loc{ii};
+%         
+%         min_distance_element = GetNearestElement(roi_loc,tem_peak_loc);
+%         min_distance_diff = roi_loc - min_distance_element;
+%         temporal_distance(kk) = min_distance_diff(1);
+%         kk = kk+1;
+%     end
+%     
+% end
+
+if 0
+    [fName,pName,index] = uiputfile('*.xlsx','Save as','data_1.xlsx');
+    if index && strcmp(fName(end-4:end),'.xlsx')
+        str = [pName fName];
+        %     data = get(handles.uitable1,'data');
+        %     data_excel = cell(size(data,1) + 1, size(data,2) + 1);
+        %     data_excel(1,2:end) = get(handles.uitable1,'ColumnName');
+        %     data_excel(2:end,1) = get(handles.uitable1,'RowName');
+        %     data_excel(2:end,2:end) = num2cell(data);
+        data_excel = temporal_distance';
+        xlswrite(str,data_excel);
+    else
+        disp('file path is not correct');
+    end
 end
 
 
+function y = GetNearestElement(inputX,vectorY)
+%return the element in @vectorY that is the nearest element of inputX
 
+tem = inputX - vectorY;
+tem_ds = tem.^2;
+idx = (tem_ds == min(tem_ds));
+nearest_element  = vectorY(idx);
+y = nearest_element;

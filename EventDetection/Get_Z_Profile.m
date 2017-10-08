@@ -11,14 +11,16 @@ else
     regoin_num = size(boxs,1);
     boxs(:,3:4) = boxs(:,1:2) + boxs(:,3:4);
     for ii = 1: regoin_num
-        com = (boxs(ii,1):boxs(ii,3)) + 1;
-        row = (boxs(ii,2):boxs(ii,4)) + 1;
+        %         com = (boxs(ii,1):boxs(ii,3)) + 1;
+        %         row = (boxs(ii,2):boxs(ii,4)) + 1;
+        com = (boxs(ii,1):boxs(ii,3));
+        row = (boxs(ii,2):boxs(ii,4));
         tem_regoin = imgs(row,com,:);
         profile(ii,:) = Get_Profile(tem_regoin);
-%         for jj = 1:imgs_num
-%             tem = tem_regoin(:,:,jj);
-%             profile(ii,jj) = sum(tem(:))/numel(tem);
-%         end
+        %         for jj = 1:imgs_num
+        %             tem = tem_regoin(:,:,jj);
+        %             profile(ii,jj) = sum(tem(:))/numel(tem);
+        %         end
     end
 end
 varargout{1} = profile;

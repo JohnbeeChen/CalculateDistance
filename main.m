@@ -7,3 +7,7 @@ addpath([cd '/detection']);
 addpath([cd '/EventDetection']);
 
 run MainForm
+
+%{
+multi lines comments
+%}
