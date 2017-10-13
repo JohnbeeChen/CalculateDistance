@@ -22,7 +22,7 @@ function varargout = FormTable(varargin)
 
 % Edit the above text to modify the response to help FormTable
 
-% Last Modified by GUIDE v2.5 12-Sep-2017 09:16:17
+% Last Modified by GUIDE v2.5 13-Oct-2017 20:07:46
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -70,8 +70,16 @@ handles.fram_index = fram_index;
 guidata(hObject, handles);
 
 % UIWAIT makes FormTable wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
+uiwait(handles.figure1);
 
+
+% --- Executes during object deletion, before destroying properties.
+function figure1_DeleteFcn(hObject, eventdata, handles)
+% hObject    handle to figure1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% uiresume(handles.figure1);
 
 % --- Outputs from this function are returned to the command line.
 function varargout = FormTable_OutputFcn(hObject, eventdata, handles)
@@ -81,7 +89,10 @@ function varargout = FormTable_OutputFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Get default command line output from handles structure
-varargout{1} = handles.output;
+% t = handles.output;
+% varargout{1} = handles.output;
+t = 1;
+varargout{1} = handles.out1;
 
 
 % --- Executes on button press in btn_analysis.
@@ -134,6 +145,7 @@ handles.distance = ds;
 handles.displaydata{2} = ds;
 handles.pixe_size = pixesize;
 handles.all_centroids = centroids;
+handles.out1 = centroids;
 guidata(hObject, handles);
 
 
@@ -159,12 +171,13 @@ if event_num > 0
     all_centroids = centroids;
     save('all_centroids.mat','all_centroids');
 end
+uiresume(handles.figure1);
+
 
 function y = GetDistance(pointOne, pointTwo)
 t = pointOne - pointTwo;
 y = sqrt(t*t');
-% t = sum(t);
-% y = sqrt(t);
+
 
 % --- Executes on button press in btn_saveexcel.
 function btn_saveexcel_Callback(hObject, eventdata, handles)

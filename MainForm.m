@@ -378,16 +378,17 @@ for idex = 1:img_set_num
         %         fit_imgs_weight = sum(event_frams_roi(:));
         [centroid(ii,1:2),fit_imgs_weight] = GetCentroid(event_frams_roi);
         centroid(ii,5) = fit_imgs_weight;
+        centroid(ii,6) = tem_box(5);%frame index in the image's stack
     end
     tem_index = 1:len;
     tem = centroid(:,1:2) + boxs(:,1:2);
     tem(:,3) = idex;
     tem = [tem tem_index'];
-    tem(:,5) = centroid(:,5);
+    tem(:,5:6) = centroid(:,5:6);
     centroid_set{idex} = tem;
     clear centroid;
 end
-col_name = {'centroid_x','centroid_y','event_order','order','intesity sum'};
+col_name = {'centroid_x','centroid_y','event_order','order','intesity sum','frame'};
 %centroids[centroids_x,centroids_y,roi_set index, index in roi_set{ii}]
 centroids = cell2mat(centroid_set);
 boxs = cell2mat(roi_set);
@@ -399,8 +400,8 @@ for ii = 2:len
     row_names = [row_names tem{ii}];
 end
 
-FormTable(centroids,boxs(:,5),col_name,row_names);
-handles.all_centroids = centroids;
+all_centroids = FormTable(centroids,boxs(:,5),col_name,row_names);
+handles.all_centroids = all_centroids;
 handles.fit_imgs_weight = fit_imgs_weight;
 guidata(hObject,handles);
 
@@ -414,12 +415,12 @@ function btn_Assort_Callback(hObject, eventdata, handles)
 %     disp('Press the FindAllParticles button firstly, please!');
 %     return;
 % end
-load all_centroids.mat
+% load all_centroids.mat 
+% the coordinate of all nanospark unit points
+all_centroids = handles.all_centroids;
 centroids_num = size(all_centroids,1);
-% dis = zeros(centroids_num);
 thrd1 = 16; %the first threshold(per nanometer)
-% load centroids.mat;
-% pixe_size = pixesize;
+
 all_centroids(:,1:2) = all_centroids(:,1:2);
 ii = 1;
 while 1
@@ -483,17 +484,32 @@ for ii = 1 : new_centroids_num
 end
 grid minor
 % all_centroids = all_centroids;
-save('all_centroids.mat','all_centroids');
+% save('all_centroids.mat','all_centroids');
 % clustering
-
+handles.merged_centroids = all_centroids;
+guidata(hObject,handles);
 
 % --- Executes on button press in btn_cluster.
 function btn_cluster_Callback(hObject, eventdata, handles)
 % hObject    handle to btn_cluster (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-clustering;
+prompt={'clusters number:'};
+defaults={num2str(30)};
+info = inputdlg(prompt, 'Input for process...!', 1, defaults);
+if ~isempty(info)
+    cluster_num = str2double(info(1));
+else
+   return; 
+end
 
+merged_centroid = handles.merged_centroids;
+X = merged_centroid(:,1:2);
+cluster_centroid = clustering(X,cluster_num);
+
+all_centroids = handles.all_centroids; 
+cluster_idx = channel_assign(all_centroids(:,1:2),cluster_centroid(:,1:2));
+t = 1;
 
 % --- Executes on button press in btn_temporal.
 function btn_temporal_Callback(hObject, eventdata, handles)
@@ -552,33 +568,12 @@ for ii = 1:imgs_num
     end   
 end
 
-% kk = 1;
-% for ii = 1:imgs_num
-%     tem_roi_set = rois{ii};
-%     roi_num = size(tem_roi_set,1);
-%     for jj = 1:roi_num
-%         tem_roi = tem_roi_set(jj,:);
-%         roi_loc = tem_roi(5);
-%         tem_peak_loc = peak_loc{ii};
-%         
-%         min_distance_element = GetNearestElement(roi_loc,tem_peak_loc);
-%         min_distance_diff = roi_loc - min_distance_element;
-%         temporal_distance(kk) = min_distance_diff(1);
-%         kk = kk+1;
-%     end
-%     
-% end
 
-if 0
+if 1
     [fName,pName,index] = uiputfile('*.xlsx','Save as','data_1.xlsx');
     if index && strcmp(fName(end-4:end),'.xlsx')
         str = [pName fName];
-        %     data = get(handles.uitable1,'data');
-        %     data_excel = cell(size(data,1) + 1, size(data,2) + 1);
-        %     data_excel(1,2:end) = get(handles.uitable1,'ColumnName');
-        %     data_excel(2:end,1) = get(handles.uitable1,'RowName');
-        %     data_excel(2:end,2:end) = num2cell(data);
-        data_excel = temporal_distance';
+        data_excel = temporal_distance;
         xlswrite(str,data_excel);
     else
         disp('file path is not correct');
