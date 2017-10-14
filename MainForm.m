@@ -457,11 +457,11 @@ while 1
         break;
     end
 end
-% figure
-% plot(all_centroids(:,1),all_centroids(:,2),'*');
-% xlabel('x/nm');
-% ylabel('y.nm');
-% grid minor
+figure
+plot(all_centroids(:,1),all_centroids(:,2),'*');
+xlabel('x/nm');
+ylabel('y.nm');
+grid minor
 
 % thrd2 = 50;
 % figure
@@ -483,6 +483,7 @@ end
 %     end
 % end
 % grid minor
+
 % all_centroids = all_centroids;
 % save('all_centroids.mat','all_centroids');
 % clustering
