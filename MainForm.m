@@ -457,32 +457,32 @@ while 1
         break;
     end
 end
-figure
-plot(all_centroids(:,1),all_centroids(:,2),'*');
-xlabel('x/nm');
-ylabel('y.nm');
-grid minor
+% figure
+% plot(all_centroids(:,1),all_centroids(:,2),'*');
+% xlabel('x/nm');
+% ylabel('y.nm');
+% grid minor
 
-thrd2 = 50;
-figure
-new_centroids_num = size(all_centroids,1);
-for ii = 1 : new_centroids_num
-    p1 = all_centroids(ii,1:2);
-    hold on
-    plot(p1(1),p1(2),'b*');
-    for jj = 1:new_centroids_num
-        if ii~=jj
-            p2 = all_centroids(jj,1:2);
-            tem_p = p1 - p2;
-            tem_distance = sqrt(tem_p*tem_p');
-            if tem_distance <= thrd2
-                hold on
-                plot([p1(1),p2(1)],[p1(2),p2(2)],'r');
-            end
-        end
-    end
-end
-grid minor
+% thrd2 = 50;
+% figure
+% new_centroids_num = size(all_centroids,1);
+% for ii = 1 : new_centroids_num
+%     p1 = all_centroids(ii,1:2);
+%     hold on
+%     plot(p1(1),p1(2),'b*');
+%     for jj = 1:new_centroids_num
+%         if ii~=jj
+%             p2 = all_centroids(jj,1:2);
+%             tem_p = p1 - p2;
+%             tem_distance = sqrt(tem_p*tem_p');
+%             if tem_distance <= thrd2
+%                 hold on
+%                 plot([p1(1),p2(1)],[p1(2),p2(2)],'r');
+%             end
+%         end
+%     end
+% end
+% grid minor
 % all_centroids = all_centroids;
 % save('all_centroids.mat','all_centroids');
 % clustering
@@ -509,7 +509,39 @@ cluster_centroid = clustering(X,cluster_num);
 
 all_centroids = handles.all_centroids; 
 cluster_idx = channel_assign(all_centroids(:,1:2),cluster_centroid(:,1:2));
-t = 1;
+tem = [all_centroids(:,[3,4,6]), cluster_idx];
+[total_info,channel_info,channel_hist] = event_analysis(tem);
+
+if 1
+    [fName,pName,index] = uiputfile('*.xlsx','Save as','data_1.xlsx');
+    if index && strcmp(fName(end-4:end),'.xlsx')
+        str = [pName fName];
+        data = total_info;
+        column_name = {'event_idx','roi_idx','frame','channel_idx','interval'};
+        data_excel = cell(size(data,1) + 1, size(data,2));
+        data_excel(1,1:end) = column_name;
+        data_excel(2:end,1:end) = num2cell(data);    
+        xlswrite(str,data_excel,'sheet1');
+        
+        column_name = {'channel_idx','used_times','events_num'};
+        data = channel_info;
+        data_excel = cell(size(data,1) + 1, size(data,2));
+        data_excel(1,1:end) = column_name;
+        data_excel(2:end,1:end) = num2cell(data);    
+        xlswrite(str,data_excel,'sheet2');
+        
+        column_name = {'used_times','channel_num'};
+        data = channel_hist;
+        data_excel = cell(size(data,1) + 1, size(data,2));
+        data_excel(1,1:end) = column_name;
+        data_excel(2:end,1:end) = num2cell(data);    
+        xlswrite(str,data_excel,'sheet3');
+     
+    else
+        disp('file path is not correct');
+    end
+end
+t  = 1;
 
 % --- Executes on button press in btn_temporal.
 function btn_temporal_Callback(hObject, eventdata, handles)
