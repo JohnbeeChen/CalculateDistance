@@ -258,19 +258,56 @@ function btn_assort_Callback(hObject, eventdata, handles)
 % hObject    handle to btn_assort (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-if ~isfield(handles,'distance')
-    disp('please analysis firstly');
-    return;
-end
-prompt={'threshold1 (nm):','threshold2 (nm):'};
-defaults={num2str(0),num2str(0)};
-info = inputdlg(prompt, 'Input for process...!', 1, defaults);
-if ~isempty(info)
-    thrd1 = str2double(info(1));
-    thrd2 = str2double(info(2));
-    %     data = handles.distance;
-end
 
+all_centroids = handles.all_centroids;
+% centroids_num = size(all_centroids,1);
+thrd1 = 16; %the first threshold(per nanometer)
+
+all_centroids(:,1:2) = all_centroids(:,1:2);
+ii = 1;
+while 1
+    centroids_num = size(all_centroids,1);
+    if ii < centroids_num
+        point_one = all_centroids(ii,:);
+        jj = ii+1;
+        while 1
+            tem_len = size(all_centroids,1);
+            if jj > tem_len
+                break;
+            end
+            point_two = all_centroids(jj,:);
+            %notice: calculate the
+            tem_point = point_two(1:2) - point_one(1:2);
+            distance =   sqrt(tem_point*tem_point');
+            if distance <= thrd1
+                weight1 = point_one(5);
+                weight2 = point_two(5);
+                w = [weight1,weight2];
+                p = [point_one(1:2);point_two(1:2)];
+                %calculate the new centroids of @point_one and @point_two
+                new_p = (w*p)./(sum(w));
+                point_one(1:2) = new_p;
+                point_one(5) = sum(w);
+                all_centroids(ii,:) = point_one;
+                all_centroids(jj,:) =[];%delet the same point
+            else
+                jj = jj + 1;
+            end
+        end
+        ii = ii + 1;
+    else
+        break;
+    end
+end
+figure
+plot(all_centroids(:,1),all_centroids(:,2),'*');
+xlabel('x/nm');
+ylabel('y.nm');
+grid minor
+axis equal;
+
+handles.merged_centroids = all_centroids;
+guidata(hObject,handles);
 
 % --- Executes on button press in btn_circle.
 function btn_circle_Callback(hObject, eventdata, handles)

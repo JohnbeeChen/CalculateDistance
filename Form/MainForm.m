@@ -22,7 +22,7 @@ function varargout = MainForm(varargin)
 
 % Edit the above text to modify the response to help MainForm
 
-% Last Modified by GUIDE v2.5 29-Sep-2017 15:41:09
+% Last Modified by GUIDE v2.5 15-Oct-2017 14:17:19
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -114,9 +114,19 @@ end
 SetAxesImage(handles.axes1,img_set{1}(:,:,1));
 s = ['1/',num2str(imag_statck_num)];
 SetTextString(handles.text_title,s);
+idx = strfind(pathname,'\');
+if length(idx) > 1
+    t1 = idx(end - 1) + 1;
+    t2 = idx(end) - 1;
+    folder_name = pathname(t1:t2);
+else
+    folder_name = pathname;
+end
 handles.img_set = img_set;
 handles.img_set_index = 1;
 handles.imag_statck_num = imag_statck_num;
+handles.folder_name = folder_name;
+handles.tiff_name = filename;
 guidata(hObject,handles);
 save('lastfile.mat','pathname','filename');
 
@@ -217,6 +227,7 @@ AddRectagle(handles.axes1,roi_set{1});
 handles.img_set_index = 1;
 handles.roi_set = roi_set;
 handles.roi_name_set = roi_name_set;
+handles.roi_filename = filename;
 
 guidata(hObject,handles);
 
@@ -486,9 +497,6 @@ axis equal;
 % end
 % grid minor
 
-% all_centroids = all_centroids;
-% save('all_centroids.mat','all_centroids');
-% clustering
 handles.merged_centroids = all_centroids;
 guidata(hObject,handles);
 
@@ -512,39 +520,67 @@ cluster_centroid = clustering(X,cluster_num);
 
 all_centroids = handles.all_centroids; 
 cluster_idx = channel_assign(all_centroids(:,1:2),cluster_centroid(:,1:2));
-tem = [all_centroids(:,[3,4,6]), cluster_idx];
-[total_info,channel_info,channel_hist] = event_analysis(tem);
+event_infos = [all_centroids(:,[3,4,6]), cluster_idx];
 
-if 1
-    [fName,pName,index] = uiputfile('*.xlsx','Save as','data_1.xlsx');
-    if index && strcmp(fName(end-4:end),'.xlsx')
-        str = [pName fName];
-        data = total_info;
-        column_name = {'event_idx','roi_idx','frame','channel_idx','interval'};
-        data_excel = cell(size(data,1) + 1, size(data,2));
-        data_excel(1,1:end) = column_name;
-        data_excel(2:end,1:end) = num2cell(data);    
-        xlswrite(str,data_excel,'sheet1');
-        
-        column_name = {'channel_idx','used_times','events_num'};
-        data = channel_info;
-        data_excel = cell(size(data,1) + 1, size(data,2));
-        data_excel(1,1:end) = column_name;
-        data_excel(2:end,1:end) = num2cell(data);    
-        xlswrite(str,data_excel,'sheet2');
-        
-        column_name = {'used_times','channel_num'};
-        data = channel_hist;
-        data_excel = cell(size(data,1) + 1, size(data,2));
-        data_excel(1,1:end) = column_name;
-        data_excel(2:end,1:end) = num2cell(data);    
-        xlswrite(str,data_excel,'sheet3');
-     
-    else
-        disp('file path is not correct');
-    end
-end
-t  = 1;
+handles.event_infos = event_infos;
+handles.cluster_centroid = cluster_centroid;
+guidata(hObject,handles);
+
+
+% --- Executes on button press in ptn_savecluster.
+function ptn_savecluster_Callback(hObject, eventdata, handles)
+% hObject    handle to ptn_savecluster (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+cluster_centroid = handles.cluster_centroid;
+folder_name = handles.folder_name;
+fName =['\',folder_name,'_cluster_centroids.xlsx'];
+pName = cd;
+
+str = [pName fName];
+data = cluster_centroid;
+% column_name = {'event_idx','roi_idx','frame','channel_idx','interval'};
+% data_excel = cell(size(data,1) + 1, size(data,2));
+% data_excel(1,1:end) = column_name;
+% data_excel(2:end,1:end) = num2cell(data);
+xlswrite(str,data);
+
+
+% --- Executes on button press in btn_channel_analysis.
+function btn_channel_analysis_Callback(hObject, eventdata, handles)
+% hObject    handle to btn_channel_analysis (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+event_infos = handles.event_infos;
+[total_info,channel_info,channel_hist] = event_analysis(event_infos);
+
+folder_name = handles.folder_name;
+fName =['\',folder_name,'_total_info.xlsx'];
+pName = cd;
+
+str = [pName fName];
+
+data = total_info;
+column_name = {'event_idx','roi_idx','frame','channel_idx','interval'};
+data_excel = cell(size(data,1) + 1, size(data,2));
+data_excel(1,1:end) = column_name;
+data_excel(2:end,1:end) = num2cell(data);
+xlswrite(str,data_excel,'sheet1');
+
+column_name = {'channel_idx','used_times','events_num'};
+data = channel_info;
+data_excel = cell(size(data,1) + 1, size(data,2));
+data_excel(1,1:end) = column_name;
+data_excel(2:end,1:end) = num2cell(data);
+xlswrite(str,data_excel,'sheet2');
+
+column_name = {'used_times','channel_num'};
+data = channel_hist;
+data_excel = cell(size(data,1) + 1, size(data,2));
+data_excel(1,1:end) = column_name;
+data_excel(2:end,1:end) = num2cell(data);
+xlswrite(str,data_excel,'sheet3');
+
 
 % --- Executes on button press in btn_temporal.
 function btn_temporal_Callback(hObject, eventdata, handles)
@@ -624,3 +660,5 @@ tem_ds = tem.^2;
 idx = (tem_ds == min(tem_ds));
 nearest_element  = vectorY(idx);
 y = nearest_element;
+
+

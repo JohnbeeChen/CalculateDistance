@@ -22,8 +22,7 @@ hold on
 circle(C(:,1:2),15);
 hold off
 title(['clusters number: ',num2str(cluster_num),',minimum distance: ',num2str(min_distance)]);
-grid minor
-axis equal
+grid minor;
 save('cluster_centroieds.mat','C');
 
 varargout{1} = C;
