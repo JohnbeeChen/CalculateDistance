@@ -165,6 +165,8 @@ for ii = 1:event_num
 end
 hold off
 grid minor;
+axis equal;
+
 legend(legend_name);
 xlabel 'x/nm',ylabel 'y/nm';
 if event_num > 0

@@ -462,6 +462,8 @@ plot(all_centroids(:,1),all_centroids(:,2),'*');
 xlabel('x/nm');
 ylabel('y.nm');
 grid minor
+axis equal;
+
 
 % thrd2 = 50;
 % figure
