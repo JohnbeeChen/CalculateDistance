@@ -474,7 +474,7 @@ xlabel('x/nm');
 ylabel('y.nm');
 grid minor
 axis equal;
-
+save('merged_centroids.mat','all_centroids');
 
 % thrd2 = 50;
 % figure

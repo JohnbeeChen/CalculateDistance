@@ -1,4 +1,5 @@
 function varargout = FindNearestPoints(pointSet)
+% @pointSet must be row vectors
 
 point_set = pointSet;
 point_num = size(point_set,1);
@@ -13,11 +14,12 @@ for ii = 1 : point_num
             tem_distance = norm(p1 - p2);
             if tem_distance < min_distance
                min_distance = tem_distance; 
-               ref_points(1,:) = p1;
-               ref_points(2,:) = p2;
+%                ref_points(1,:) = p1;
+%                ref_points(2,:) = p2;
+               idx = [ii,jj];
             end
         end
     end
 end
-varargout{1} = ref_points;
+varargout{1} = idx;
 varargout{2} = min_distance;
