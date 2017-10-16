@@ -514,9 +514,14 @@ else
    return; 
 end
 
-merged_centroid = handles.merged_centroids;
+merged_centroid = handles.merge_centroids;
 X = merged_centroid(:,1:2);
-cluster_centroid = clustering(X,cluster_num);
+start_centroid = PointsMerge(X(:,1:2),cluster_num);
+if isempty(start_centroid)
+    return;
+end
+
+cluster_centroid= clustering(X,start_centroid);
 
 all_centroids = handles.all_centroids; 
 cluster_idx = channel_assign(all_centroids(:,1:2),cluster_centroid(:,1:2));

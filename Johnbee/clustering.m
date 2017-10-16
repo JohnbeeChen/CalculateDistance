@@ -1,18 +1,15 @@
 function varargout = clustering(varargin)
 
-% load all_centroids.mat
-% 
-% % cluster_num = 10;
-% X = all_centroids(:,1:2);
+
 X = varargin{1};
-cluster_num  = varargin{2};
-% figure;
-% plot(X(:,1),X(:,2),'k*','MarkerSize',5);
+star_centroid  = varargin{2};
 opts = statset('Display','final');
-[idx,C,~] = kmeans(X,cluster_num,'Replicate',10,'Options',opts);
+[idx,C,~] = kmeans(X,[],'Options',opts,'Start',star_centroid);
 [~,min_distance] = FindNearestPoints(C);
+cluster_num = size(C,1);
+
 figure;
-for ii  = 1:cluster_num
+for ii  = 1:star_centroid
     hold on
     plot(X(idx==ii,1),X(idx==ii,2),'*','MarkerSize',12);
 end
