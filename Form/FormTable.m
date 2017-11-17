@@ -159,7 +159,7 @@ for ii = 1:event_num
     idx = centroids(:,3) == ii;
     point_set_loc = centroids(idx,1:2);
     
-    plot(point_set_loc(:,1),point_set_loc(:,2),'*');
+    plot(point_set_loc(:,1),point_set_loc(:,2),'.','MarkerSize',13);
     hold on
     legend_name{ii} = ['nanospark ',num2str(ii)];
 end

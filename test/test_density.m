@@ -1,6 +1,6 @@
 % close all;
 clear;
-load merged_centroids.mat
+load all_centroids.mat
 
 points = all_centroids(:,1:2);
 X = points;

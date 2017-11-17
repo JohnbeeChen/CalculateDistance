@@ -469,33 +469,12 @@ while 1
     end
 end
 figure
-plot(all_centroids(:,1),all_centroids(:,2),'*');
+plot(all_centroids(:,1),all_centroids(:,2),'k.','MarkerSize',13);
 xlabel('x/nm');
 ylabel('y.nm');
 grid minor
 axis equal;
 save('merged_centroids.mat','all_centroids');
-
-% thrd2 = 50;
-% figure
-% new_centroids_num = size(all_centroids,1);
-% for ii = 1 : new_centroids_num
-%     p1 = all_centroids(ii,1:2);
-%     hold on
-%     plot(p1(1),p1(2),'b*');
-%     for jj = 1:new_centroids_num
-%         if ii~=jj
-%             p2 = all_centroids(jj,1:2);
-%             tem_p = p1 - p2;
-%             tem_distance = sqrt(tem_p*tem_p');
-%             if tem_distance <= thrd2
-%                 hold on
-%                 plot([p1(1),p2(1)],[p1(2),p2(2)],'r');
-%             end
-%         end
-%     end
-% end
-% grid minor
 
 handles.merged_centroids = all_centroids;
 guidata(hObject,handles);
@@ -514,20 +493,26 @@ else
    return; 
 end
 
-merged_centroid = handles.merge_centroids;
+% merged_centroid = handles.all_centroids;
+merged_centroid = handles.merged_centroids;
 X = merged_centroid(:,1:2);
 start_centroid = PointsMerge(X(:,1:2),cluster_num);
 if isempty(start_centroid)
     return;
 end
-
+figure;
+plot(merged_centroid(:,1),merged_centroid(:,2),'r*');
+hold on
+plot(start_centroid(:,1),start_centroid(:,2),'kx','MarkerSize',13);
+circle(start_centroid(:,1:2),15);
+grid minor
 cluster_centroid= clustering(X,start_centroid);
 
 all_centroids = handles.all_centroids; 
 cluster_idx = channel_assign(all_centroids(:,1:2),cluster_centroid(:,1:2));
 event_infos = [all_centroids(:,[3,4,6]), cluster_idx];
 
-handles.event_infos = event_infos;
+handles.event_infos = event_infos
 handles.cluster_centroid = cluster_centroid;
 guidata(hObject,handles);
 
@@ -633,8 +618,11 @@ for ii = 1:imgs_num
         
         kk = kk+1;        
         
-        if 0
+        if 1
             figure;
+            subplot(2,1,1);
+            plot(profile_set(jj,:));
+            subplot(2,1,2);
             plot(small_trace_smooth);
             hold on
             plot(tem_x,tem_y,'r*');
