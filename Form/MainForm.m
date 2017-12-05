@@ -494,23 +494,47 @@ else
 end
 
 % merged_centroid = handles.all_centroids;
-merged_centroid = handles.merged_centroids;
-X = merged_centroid(:,1:2);
+merged_centroids = handles.merged_centroids;
+X = merged_centroids(:,1:2);
 start_centroid = PointsMerge(X(:,1:2),cluster_num);
 if isempty(start_centroid)
     return;
 end
-figure;
-plot(merged_centroid(:,1),merged_centroid(:,2),'r*');
-hold on
-plot(start_centroid(:,1),start_centroid(:,2),'kx','MarkerSize',13);
-circle(start_centroid(:,1:2),15);
-grid minor
-cluster_centroid= clustering(X,start_centroid);
+% figure;
+% plot(merged_centroids(:,1),merged_centroids(:,2),'r*');
+% hold on
+% plot(start_centroid(:,1),start_centroid(:,2),'kx','MarkerSize',13);
+% circle(start_centroid(:,1:2),15);
+% grid minor
+[cluster_centroid,cluster_idx] = clustering(X,start_centroid);
 
 all_centroids = handles.all_centroids; 
 cluster_idx = channel_assign(all_centroids(:,1:2),cluster_centroid(:,1:2));
 event_infos = [all_centroids(:,[3,4,6]), cluster_idx];
+
+%% omits that channels which occur only once
+% event_idx = event_infos(:,4);
+% idx_tabulate = tabulate(event_idx);
+% sigle_idx = idx_tabulate(:,2) == 1;
+% occur_sigle_event = idx_tabulate(sigle_idx,1);
+% 
+% omited_event_infos = event_infos;
+% omited_all_centroids = all_centroids;
+% omited_merged_centroids = merged_centroids;
+% 
+% omited_cluster_centroid = cluster_centroid(~sigle_idx,:);
+% 
+% if ~isempty(occur_sigle_event)
+%     len = length(occur_sigle_event);
+%     for ii = 1:len
+%        tem_idx = omited_event_infos(:,4) ~= occur_sigle_event(ii);
+%        omited_event_infos = omited_event_infos(tem_idx,:);
+%        omited_all_centroids = omited_all_centroids(tem_idx,:);
+%     end
+% end
+% 
+% % merged_centroids = handles.merged_centroids;
+% C = clustering(omited_all_centroids(:,1:2),omited_cluster_centroid(:,1:2));
 
 handles.event_infos = event_infos;
 handles.cluster_centroid = cluster_centroid;
@@ -683,8 +707,8 @@ if ~isempty(occur_sigle_event)
     end
 end
 
-merged_centroid = handles.merged_centroid;
-C = clustering(merged_centroid(:,1:2),omited_cluster_centroid(:,1:2));
+% merged_centroids = handles.merged_centroids;
+C = clustering(omited_all_centroids(:,1:2),omited_cluster_centroid(:,1:2));
 
 
 handles.omited_event_infos = omited_event_infos;

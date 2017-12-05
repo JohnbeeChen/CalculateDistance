@@ -23,3 +23,4 @@ grid minor;
 save('cluster_centroieds.mat','C');
 
 varargout{1} = C;
+varargout{2} = idx;
