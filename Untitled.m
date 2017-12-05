@@ -22,8 +22,10 @@ start_centroid = [
 343.0665316	310.493809
 275.5378464	554.1499071
 343.6037812	505.0815906
-475.8067271	356.9306882 ];
+475.8067271	356.9306882
+ ];
 
 load merged_centroids.mat;
+X = all_centroids(:,1:2);
 cluster_centroid= clustering(X,start_centroid);
 t = 1;

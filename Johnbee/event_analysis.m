@@ -1,5 +1,9 @@
 function varargout = event_analysis(varargin)
 % the input @varargin is event_info [roi_idx,roi_sub_idx,frame,channel_idx]
+% outupt @avargout = [total_info,channel_info,channel_hist];
+% @total_info = ['event_idx','roi_idx','frame','channel_idx','interval']
+% @channel_info = ['channel_idx','used_times','events_num']
+% @channel_hist = ['used_times','channel_num']
 
 event_info = varargin{1};
 channel_num = max(event_info(:,4));

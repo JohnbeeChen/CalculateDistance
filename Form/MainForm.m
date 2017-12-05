@@ -22,7 +22,7 @@ function varargout = MainForm(varargin)
 
 % Edit the above text to modify the response to help MainForm
 
-% Last Modified by GUIDE v2.5 15-Oct-2017 14:17:19
+% Last Modified by GUIDE v2.5 04-Dec-2017 19:50:32
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -512,7 +512,7 @@ all_centroids = handles.all_centroids;
 cluster_idx = channel_assign(all_centroids(:,1:2),cluster_centroid(:,1:2));
 event_infos = [all_centroids(:,[3,4,6]), cluster_idx];
 
-handles.event_infos = event_infos
+handles.event_infos = event_infos;
 handles.cluster_centroid = cluster_centroid;
 guidata(hObject,handles);
 
@@ -570,7 +570,7 @@ data_excel = cell(size(data,1) + 1, size(data,2));
 data_excel(1,1:end) = column_name;
 data_excel(2:end,1:end) = num2cell(data);
 xlswrite(str,data_excel,'sheet3');
-
+disp('channel''s analysis finished!');
 
 % --- Executes on button press in btn_temporal.
 function btn_temporal_Callback(hObject, eventdata, handles)
@@ -644,7 +644,6 @@ if 1
     end
 end
 
-
 function y = GetNearestElement(inputX,vectorY)
 %return the element in @vectorY that is the nearest element of inputX
 
@@ -654,4 +653,40 @@ idx = (tem_ds == min(tem_ds));
 nearest_element  = vectorY(idx);
 y = nearest_element;
 
+% --- Executes on button press in btn_OmitSigle.
+function btn_OmitSigle_Callback(hObject, eventdata, handles)
+% hObject    handle to btn_OmitSigle (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+event_infos = handles.event_infos;
+all_centroids = handles.all_centroids;
+cluster_centroid = handles.cluster_centroid;
 
+event_idx = event_infos(:,4);
+idx_tabulate = tabulate(event_idx);
+sigle_idx = idx_tabulate(:,2) == 1;
+occur_sigle_event = idx_tabulate(sigle_idx,1);
+
+omited_event_infos = event_infos;
+omited_all_centroids = all_centroids;
+
+omited_cluster_centroid = cluster_centroid(~sigle_idx,:);
+
+if ~isempty(occur_sigle_event)
+    len = length(occur_sigle_event);
+    for ii = 1:len
+       tem_idx = omited_event_infos(:,4) ~= occur_sigle_event(ii);
+       omited_event_infos = omited_event_infos(tem_idx,:);
+       omited_all_centroids = omited_all_centroids(tem_idx,:);
+%        tem_cluster_idx = omited_cluster_centroid(:,3) ~= occur_sigle_event(ii);
+%        omited_cluster_centroid = omited_cluster_centroid(tem_cluster_idx,:);
+    end
+end
+
+merged_centroid = handles.merged_centroid;
+C = clustering(merged_centroid(:,1:2),omited_cluster_centroid(:,1:2));
+
+
+handles.omited_event_infos = omited_event_infos;
+handles.omited_all_centroids = omited_all_centroids;
+guidata(hObject,handles);
