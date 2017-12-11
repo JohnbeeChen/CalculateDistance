@@ -7,6 +7,20 @@
 function varargout = FindLeastCircle(varargin)
 
 point_set = varargin{1};
+len = size(point_set,1);
+if len == 0
+   varargout{1} = [0 0 0];
+   return;
+elseif len == 1
+    varargout{1} = [point_set,0];
+    return;
+elseif len == 2
+    cen = sum(point_set)./len;
+    tem  = point_set(1,:) - point_set(2,:);
+    radiu = sqrt(tem*tem')./2;
+    varargout{1} = [cen, radiu];
+    return;
+end
 x = point_set(:,1);
 y = point_set(:,2);
 set_3P=nchoosek(1:length(x),3);

@@ -10,7 +10,3 @@ addpath([cd '/test']);
 addpath([cd '/Johnbee']);
 
 run MainForm
-
-%{
-multi lines comments
-%}

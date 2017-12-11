@@ -5,11 +5,27 @@ X = varargin{1};
 star_centroid  = varargin{2};
 opts = statset('Display','final');
 [idx,C,~] = kmeans(X,[],'Options',opts,'Start',star_centroid);
-[~,min_distance] = FindNearestPoints(C);
+% [~,min_distance] = FindNearestPoints(C);
 cluster_num = size(C,1);
 
 figure;
 for ii  = 1:cluster_num
+    hold on
+    plot(X(idx==ii,1),X(idx==ii,2),'.','MarkerSize',13);
+    tem_point = X(idx==ii,1:2);
+    R(ii,:) = FindLeastCircle(tem_point);
+    hold on
+    circle(R(ii,1:2),R(ii,3));
+end
+radiuses = R(:,3);
+positive_idx = radiuses ~= 0;
+radiuses = radiuses(positive_idx);
+area = pi*radiuses.^2;
+ave_area = mean(area);
+title(['circles average area: ',num2str(ave_area),';cluster number:',num2str(cluster_num)]);
+
+figure;
+for ii = 1:cluster_num
     hold on
     plot(X(idx==ii,1),X(idx==ii,2),'.','MarkerSize',13);
 end

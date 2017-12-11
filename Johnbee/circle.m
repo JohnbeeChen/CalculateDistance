@@ -3,6 +3,9 @@ function [] = circle(center,r,varargin)
 
 x = center(:,1);
 y = center(:,2);
+if r <= 0
+    return;
+end
 num = size(center,1);
 if nargin == 3
     clo = varargin{1};
