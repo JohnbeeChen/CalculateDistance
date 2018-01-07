@@ -6,10 +6,13 @@ function varargout = event_analysis(varargin)
 % @channel_hist = ['used_times','channel_num']
 
 event_info = varargin{1};
-channel_num = max(event_info(:,4));
+event_idx = event_info(:,4);
+idx_tabulate = unique(event_idx);
+channel_num = length(idx_tabulate);
 y = [];
 for ii = 1:channel_num
-    idx = (event_info(:,4) == ii);
+    kk = idx_tabulate(ii);
+    idx = (event_info(:,4) == kk);
     tem = event_info(idx,:);
     num_tem = size(tem,1);
     unique_num = length(unique(tem(:,1)));

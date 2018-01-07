@@ -512,30 +512,6 @@ all_centroids = handles.all_centroids;
 cluster_idx = channel_assign(all_centroids(:,1:2),cluster_centroid(:,1:2));
 event_infos = [all_centroids(:,[3,4,6]), cluster_idx];
 
-%% omits that channels which occur only once
-% event_idx = event_infos(:,4);
-% idx_tabulate = tabulate(event_idx);
-% sigle_idx = idx_tabulate(:,2) == 1;
-% occur_sigle_event = idx_tabulate(sigle_idx,1);
-% 
-% omited_event_infos = event_infos;
-% omited_all_centroids = all_centroids;
-% omited_merged_centroids = merged_centroids;
-% 
-% omited_cluster_centroid = cluster_centroid(~sigle_idx,:);
-% 
-% if ~isempty(occur_sigle_event)
-%     len = length(occur_sigle_event);
-%     for ii = 1:len
-%        tem_idx = omited_event_infos(:,4) ~= occur_sigle_event(ii);
-%        omited_event_infos = omited_event_infos(tem_idx,:);
-%        omited_all_centroids = omited_all_centroids(tem_idx,:);
-%     end
-% end
-% 
-% % merged_centroids = handles.merged_centroids;
-% C = clustering(omited_all_centroids(:,1:2),omited_cluster_centroid(:,1:2));
-
 handles.event_infos = event_infos;
 handles.cluster_centroid = cluster_centroid;
 guidata(hObject,handles);
@@ -566,34 +542,53 @@ function btn_channel_analysis_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 event_infos = handles.event_infos;
-[total_info,channel_info,channel_hist] = event_analysis(event_infos);
+merged_centroids = handles.merged_centroids;
+all_centroids = handles.all_centroids;
+cluster_centroid = handles.cluster_centroid;
 
+[total_info,channel_info,channel_hist] = event_analysis(event_infos);
 folder_name = handles.folder_name;
 fName =['\',folder_name,'_total_info.xlsx'];
 pName = cd;
 
 str = [pName fName];
 
-data = total_info;
 column_name = {'event_idx','roi_idx','frame','channel_idx','interval'};
-data_excel = cell(size(data,1) + 1, size(data,2));
-data_excel(1,1:end) = column_name;
-data_excel(2:end,1:end) = num2cell(data);
-xlswrite(str,data_excel,'sheet1');
+data = total_info;
+SaveExcel(str,data,column_name,[],'total_info');
 
 column_name = {'channel_idx','used_times','events_num'};
 data = channel_info;
-data_excel = cell(size(data,1) + 1, size(data,2));
-data_excel(1,1:end) = column_name;
-data_excel(2:end,1:end) = num2cell(data);
-xlswrite(str,data_excel,'sheet2');
+SaveExcel(str,data,column_name,[],'channel_info');
 
 column_name = {'used_times','channel_num'};
 data = channel_hist;
-data_excel = cell(size(data,1) + 1, size(data,2));
-data_excel(1,1:end) = column_name;
-data_excel(2:end,1:end) = num2cell(data);
-xlswrite(str,data_excel,'sheet3');
+SaveExcel(str,data,column_name,[],'channel_hist');
+
+% omits that channels which occur only once
+% event_idx = event_infos(:,4);
+% idx_tabulate = tabulate(event_idx);
+% sigle_idx = idx_tabulate(:,2) == 1;
+% occur_sigle_event = idx_tabulate(sigle_idx,1);
+% 
+% omited_event_infos = event_infos;
+% omited_all_centroids = all_centroids;
+% omited_merged_centroids = merged_centroids;
+% 
+% omited_cluster_centroid = cluster_centroid(~sigle_idx,:);
+% 
+% if ~isempty(occur_sigle_event)
+%     len = length(occur_sigle_event);
+%     for ii = 1:len
+%        tem_idx = omited_event_infos(:,4) ~= occur_sigle_event(ii);
+%        omited_event_infos = omited_event_infos(tem_idx,:);
+%        omited_all_centroids = omited_all_centroids(tem_idx,:);
+%     end
+% end
+% % 
+% % display the new clusters without the single point
+% C = clustering(omited_all_centroids(:,1:2),omited_cluster_centroid(:,1:2));
+
 disp('channel''s analysis finished!');
 
 % --- Executes on button press in btn_temporal.
@@ -683,9 +678,12 @@ function btn_OmitSigle_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 event_infos = handles.event_infos;
+merged_centroids = handles.merged_centroids;
 all_centroids = handles.all_centroids;
 cluster_centroid = handles.cluster_centroid;
+folder_name = handles.folder_name;
 
+% omits that channels which occur only once
 event_idx = event_infos(:,4);
 idx_tabulate = tabulate(event_idx);
 sigle_idx = idx_tabulate(:,2) == 1;
@@ -693,6 +691,7 @@ occur_sigle_event = idx_tabulate(sigle_idx,1);
 
 omited_event_infos = event_infos;
 omited_all_centroids = all_centroids;
+omited_merged_centroids = merged_centroids;
 
 omited_cluster_centroid = cluster_centroid(~sigle_idx,:);
 
@@ -702,14 +701,26 @@ if ~isempty(occur_sigle_event)
        tem_idx = omited_event_infos(:,4) ~= occur_sigle_event(ii);
        omited_event_infos = omited_event_infos(tem_idx,:);
        omited_all_centroids = omited_all_centroids(tem_idx,:);
-%        tem_cluster_idx = omited_cluster_centroid(:,3) ~= occur_sigle_event(ii);
-%        omited_cluster_centroid = omited_cluster_centroid(tem_cluster_idx,:);
     end
 end
-
-% merged_centroids = handles.merged_centroids;
+% display the new clusters without the single point
 C = clustering(omited_all_centroids(:,1:2),omited_cluster_centroid(:,1:2));
 
+fName =['\',folder_name,'_total_infoNoSingle.xlsx'];
+pName = cd;
+str = [pName fName];
+[total_info,channel_info,channel_hist] = event_analysis(omited_event_infos);
+column_name = {'event_idx','roi_idx','frame','channel_idx','interval'};
+data = total_info;
+SaveExcel(str,data,column_name,[],'total_info');
+
+column_name = {'channel_idx','used_times','events_num'};
+data = channel_info;
+SaveExcel(str,data,column_name,[],'channel_info');
+
+column_name = {'used_times','channel_num'};
+data = channel_hist;
+SaveExcel(str,data,column_name,[],'channel_hist');
 
 handles.omited_event_infos = omited_event_infos;
 handles.omited_all_centroids = omited_all_centroids;

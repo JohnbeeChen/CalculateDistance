@@ -22,7 +22,8 @@ positive_idx = radiuses ~= 0;
 radiuses = radiuses(positive_idx);
 area = pi*radiuses.^2;
 ave_area = mean(area);
-title(['circles average area: ',num2str(ave_area),';cluster number:',num2str(cluster_num)]);
+ave_radiuses = mean(radiuses);
+title(['circles average radius: ',num2str(ave_radiuses),';cluster number:',num2str(cluster_num)]);
 
 figure;
 for ii = 1:cluster_num

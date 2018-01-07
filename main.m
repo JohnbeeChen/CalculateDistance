@@ -1,4 +1,5 @@
 close all;
+clear;
 clc;
 addpath([cd '/data']);
 addpath([cd '/common']);
