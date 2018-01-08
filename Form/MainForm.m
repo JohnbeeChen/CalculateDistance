@@ -565,30 +565,6 @@ column_name = {'used_times','channel_num'};
 data = channel_hist;
 SaveExcel(str,data,column_name,[],'channel_hist');
 
-% omits that channels which occur only once
-% event_idx = event_infos(:,4);
-% idx_tabulate = tabulate(event_idx);
-% sigle_idx = idx_tabulate(:,2) == 1;
-% occur_sigle_event = idx_tabulate(sigle_idx,1);
-% 
-% omited_event_infos = event_infos;
-% omited_all_centroids = all_centroids;
-% omited_merged_centroids = merged_centroids;
-% 
-% omited_cluster_centroid = cluster_centroid(~sigle_idx,:);
-% 
-% if ~isempty(occur_sigle_event)
-%     len = length(occur_sigle_event);
-%     for ii = 1:len
-%        tem_idx = omited_event_infos(:,4) ~= occur_sigle_event(ii);
-%        omited_event_infos = omited_event_infos(tem_idx,:);
-%        omited_all_centroids = omited_all_centroids(tem_idx,:);
-%     end
-% end
-% % 
-% % display the new clusters without the single point
-% C = clustering(omited_all_centroids(:,1:2),omited_cluster_centroid(:,1:2));
-
 disp('channel''s analysis finished!');
 
 % --- Executes on button press in btn_temporal.

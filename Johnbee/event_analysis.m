@@ -14,9 +14,9 @@ for ii = 1:channel_num
     kk = idx_tabulate(ii);
     idx = (event_info(:,4) == kk);
     tem = event_info(idx,:);
-    num_tem = size(tem,1);
+    num_tem = size(tem,1);                            
     unique_num = length(unique(tem(:,1)));
-    channel_point_number(ii,:) = [ii,num_tem,unique_num];
+    channel_point_number(ii,:) = [kk,num_tem,unique_num];
     
     tem = sortrows(tem,3); %sort descending by frame
     tem_frame = tem(:,3);
