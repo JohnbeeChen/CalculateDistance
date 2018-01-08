@@ -428,23 +428,23 @@ function btn_Assort_Callback(hObject, eventdata, handles)
 % end
 % load all_centroids.mat 
 % the coordinate of all nanospark unit points
-all_centroids = handles.all_centroids;
-centroids_num = size(all_centroids,1);
+merged_centroids = handles.all_centroids;
+centroids_num = size(merged_centroids,1);
 thrd1 = 16; %the first threshold(per nanometer)
 
-all_centroids(:,1:2) = all_centroids(:,1:2);
+merged_centroids(:,1:2) = merged_centroids(:,1:2);
 ii = 1;
 while 1
-    centroids_num = size(all_centroids,1);
+    centroids_num = size(merged_centroids,1);
     if ii < centroids_num
-        point_one = all_centroids(ii,:);
+        point_one = merged_centroids(ii,:);
         jj = ii+1;
         while 1
-            tem_len = size(all_centroids,1);
+            tem_len = size(merged_centroids,1);
             if jj > tem_len
                 break;
             end
-            point_two = all_centroids(jj,:);
+            point_two = merged_centroids(jj,:);
             %notice: calculate the
             tem_point = point_two(1:2) - point_one(1:2);
             distance =   sqrt(tem_point*tem_point');
@@ -457,8 +457,8 @@ while 1
                 new_p = (w*p)./(sum(w));
                 point_one(1:2) = new_p;
                 point_one(5) = sum(w);
-                all_centroids(ii,:) = point_one;
-                all_centroids(jj,:) =[];%delet the same point
+                merged_centroids(ii,:) = point_one;
+                merged_centroids(jj,:) =[];%delet the same point
             else
                 jj = jj + 1;
             end
@@ -469,14 +469,14 @@ while 1
     end
 end
 figure
-plot(all_centroids(:,1),all_centroids(:,2),'k.','MarkerSize',13);
+plot(merged_centroids(:,1),merged_centroids(:,2),'k.','MarkerSize',13);
 xlabel('x/nm');
 ylabel('y.nm');
 grid minor
 axis equal;
-save('merged_centroids.mat','all_centroids');
+save('merged_centroids.mat','merged_centroids');
 
-handles.merged_centroids = all_centroids;
+handles.merged_centroids = merged_centroids;
 guidata(hObject,handles);
 
 % --- Executes on button press in btn_cluster.
@@ -546,6 +546,10 @@ merged_centroids = handles.merged_centroids;
 all_centroids = handles.all_centroids;
 cluster_centroid = handles.cluster_centroid;
 
+X = all_centroids(:,1:2);
+start_centroid = cluster_centroid;
+clustering(X,start_centroid);
+
 [total_info,channel_info,channel_hist,ratio] = event_analysis(event_infos);
 folder_name = handles.folder_name;
 fName =['\',folder_name,'_total_info.xlsx'];
@@ -565,7 +569,7 @@ column_name = {'used_times','channel_num'};
 data = channel_hist;
 SaveExcel(str,data,column_name,[],'channel_hist');
 
-column_name = {'len per zip','len ratio','channel num per zip','num ratio'};
+column_name = {'zip idx','len per zip','len ratio','channel num per zip','num ratio'};
 row_name = handles.roi_filename;
 row_name{end+1} = 'All';
 data = ratio;
@@ -682,11 +686,21 @@ if ~isempty(occur_sigle_event)
     for ii = 1:len
        tem_idx = omited_event_infos(:,4) ~= occur_sigle_event(ii);
        omited_event_infos = omited_event_infos(tem_idx,:);
+       omited_points = omited_all_centroids(~tem_idx,:);
        omited_all_centroids = omited_all_centroids(tem_idx,:);
+       
+       tem_cen = omited_merged_centroids(:,3:4) - omited_points(1,3:4);
+       tem_dis = sum(tem_cen.^2,2);
+       tem_dis_idx = tem_dis == 0;
+       omited_merged_centroids = omited_merged_centroids(~tem_dis_idx,:);
+       t =1;
     end
 end
+% num_omited_cluster = size(omited_cluster_centroid,1);
+% omited_merged_centroids = PointsMerge(omited_merged_centroids,num_omited_cluster);
 % display the new clusters without the single point
-C = clustering(omited_all_centroids(:,1:2),omited_cluster_centroid(:,1:2));
+clustering(omited_merged_centroids(:,1:2),omited_cluster_centroid(:,1:2));
+clustering(omited_all_centroids(:,1:2),omited_cluster_centroid(:,1:2));
 
 fName =['\',folder_name,'_total_infoNoSingle.xlsx'];
 pName = cd;
@@ -704,7 +718,7 @@ column_name = {'used_times','channel_num'};
 data = channel_hist;
 SaveExcel(str,data,column_name,[],'channel_hist');
 
-column_name = {'len per zip','len ratio','channel num per zip','num ratio'};
+column_name = {'zip idx','len per zip','len ratio','channel num per zip','num ratio'};
 row_name = handles.roi_filename;
 data = ratio;
 SaveExcel(str,data,column_name,[],'ratio_info');

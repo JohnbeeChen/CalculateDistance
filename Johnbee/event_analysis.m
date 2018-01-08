@@ -54,12 +54,13 @@ all_num = length(unique(tem(:,2)));
 for ii = 1:max_idx
     idx = tem(:,1) == ii;
     temp = tem(idx,2);
-    len(ii,1) = length(temp);
-    len(ii,2) = len(ii,1)/all_len;
+    len(ii,1) = ii;
+    len(ii,2) = length(temp);
+    len(ii,3) = len(ii,1)/all_len;
     num(ii,1) = length(unique(temp));
     num(ii,2) = num(ii,1)/all_num;
 end
-len(ii+1,:) = [all_len,1];
+len(ii+1,:) = [ii+1,all_len,1];
 num(ii+1,:) = [all_num,1];
 varargout{1} = [len,num];
 
