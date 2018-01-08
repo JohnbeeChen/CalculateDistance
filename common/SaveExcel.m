@@ -22,7 +22,7 @@ elseif isempty(colum_name)&& ~isempty(row_name)
     data_excel = cell(sz(1),sz(2)+1);
     data_excel(1:end,1) = row_name;
     data_excel(1:end,2:end) = num2cell(data);    
-elseif ~isempty(colum_name)&&isempty(row_name)
+elseif ~isempty(colum_name)&&~isempty(row_name)
     data_excel = cell(sz(1)+1,sz(2)+1);
     data_excel(1,2:end) = colum_name;
     data_excel(2:end,1) = row_name;

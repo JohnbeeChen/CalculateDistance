@@ -546,7 +546,7 @@ merged_centroids = handles.merged_centroids;
 all_centroids = handles.all_centroids;
 cluster_centroid = handles.cluster_centroid;
 
-[total_info,channel_info,channel_hist] = event_analysis(event_infos);
+[total_info,channel_info,channel_hist,ratio] = event_analysis(event_infos);
 folder_name = handles.folder_name;
 fName =['\',folder_name,'_total_info.xlsx'];
 pName = cd;
@@ -564,6 +564,12 @@ SaveExcel(str,data,column_name,[],'channel_info');
 column_name = {'used_times','channel_num'};
 data = channel_hist;
 SaveExcel(str,data,column_name,[],'channel_hist');
+
+column_name = {'len per zip','len ratio','channel num per zip','num ratio'};
+row_name = handles.roi_filename;
+row_name{end+1} = 'All';
+data = ratio;
+SaveExcel(str,data,column_name,[],'ratio_info');
 
 disp('channel''s analysis finished!');
 
@@ -685,7 +691,7 @@ C = clustering(omited_all_centroids(:,1:2),omited_cluster_centroid(:,1:2));
 fName =['\',folder_name,'_total_infoNoSingle.xlsx'];
 pName = cd;
 str = [pName fName];
-[total_info,channel_info,channel_hist] = event_analysis(omited_event_infos);
+[total_info,channel_info,channel_hist,ratio] = event_analysis(omited_event_infos);
 column_name = {'event_idx','roi_idx','frame','channel_idx','interval'};
 data = total_info;
 SaveExcel(str,data,column_name,[],'total_info');
@@ -697,6 +703,11 @@ SaveExcel(str,data,column_name,[],'channel_info');
 column_name = {'used_times','channel_num'};
 data = channel_hist;
 SaveExcel(str,data,column_name,[],'channel_hist');
+
+column_name = {'len per zip','len ratio','channel num per zip','num ratio'};
+row_name = handles.roi_filename;
+data = ratio;
+SaveExcel(str,data,column_name,[],'ratio_info');
 
 handles.omited_event_infos = omited_event_infos;
 handles.omited_all_centroids = omited_all_centroids;
