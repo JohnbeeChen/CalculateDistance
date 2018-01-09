@@ -22,7 +22,7 @@ function varargout = MainForm(varargin)
 
 % Edit the above text to modify the response to help MainForm
 
-% Last Modified by GUIDE v2.5 04-Dec-2017 19:50:32
+% Last Modified by GUIDE v2.5 09-Jan-2018 16:26:39
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -484,28 +484,26 @@ function btn_cluster_Callback(hObject, eventdata, handles)
 % hObject    handle to btn_cluster (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-prompt={'clusters number:'};
-defaults={num2str(30)};
-info = inputdlg(prompt, 'Input for process...!', 1, defaults);
-if ~isempty(info)
-    cluster_num = str2double(info(1));
-else
-   return; 
-end
-
-% merged_centroid = handles.all_centroids;
 merged_centroids = handles.merged_centroids;
 X = merged_centroids(:,1:2);
-start_centroid = PointsMerge(X(:,1:2),cluster_num);
-if isempty(start_centroid)
-    return;
+
+if exist('lastfile.mat','file')
+    P=importdata('lastfile.mat');
+    pathname=P.pathname;
+else
+    pathname=cd;
 end
-% figure;
-% plot(merged_centroids(:,1),merged_centroids(:,2),'r*');
-% hold on
-% plot(start_centroid(:,1),start_centroid(:,2),'kx','MarkerSize',13);
-% circle(start_centroid(:,1:2),15);
-% grid minor
+[filename, pathname] = uigetfile( ...
+    {'*.xls;*.xlsx', 'All Excel-Files (*.xls,*.xlsx)'; ...
+    '*.*','All Files (*.*)'}, ...
+    'Select Image File',pathname,'MultiSelect','on');
+if isequal([filename,pathname],[0,0])
+    disp('the path do not exist!');
+   return;
+else
+    start_centroid = xlsread(fullfile(pathname,filename));
+end
+
 [cluster_centroid,cluster_idx] = clustering(X,start_centroid);
 
 all_centroids = handles.all_centroids; 
@@ -515,7 +513,61 @@ event_infos = [all_centroids(:,[3,4,6]), cluster_idx];
 handles.event_infos = event_infos;
 handles.cluster_centroid = cluster_centroid;
 guidata(hObject,handles);
+% --- Executes on button press in btn_ClusterFixed.
+function btn_ClusterFixed_Callback(hObject, eventdata, handles)
+% hObject    handle to btn_ClusterFixed (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+merged_centroids = handles.merged_centroids;
+X = merged_centroids(:,1:2);
+prompt={'clusters number:'};
+defaults={num2str(30)};
+info = inputdlg(prompt, 'Input for process...!', 1, defaults);
+if ~isempty(info)
+    cluster_num = str2double(info(1));
+else
+    return;
+end
+start_centroid = PointsMerge(X(:,1:2),cluster_num);
+if isempty(start_centroid)
+    return;
+end
+[cluster_centroid,cluster_idx] = clustering(X,start_centroid);
 
+all_centroids = handles.all_centroids;
+cluster_idx = channel_assign(all_centroids(:,1:2),cluster_centroid(:,1:2));
+event_infos = [all_centroids(:,[3,4,6]), cluster_idx];
+
+handles.event_infos = event_infos;
+handles.cluster_centroid = cluster_centroid;
+guidata(hObject,handles);
+    
+% --- Executes on button press in btn_ClusterRandom.
+function btn_ClusterRandom_Callback(hObject, eventdata, handles)
+% hObject    handle to btn_ClusterRandom (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA) 
+merged_centroids = handles.merged_centroids;
+X = merged_centroids(:,1:2);
+prompt={'clusters number:'};
+defaults={num2str(30)};
+info = inputdlg(prompt, 'Input for process...!', 1, defaults);
+if ~isempty(info)
+    cluster_num = str2double(info(1));
+else
+    return;
+end
+
+[~,start_centroid,~] = kmeans(X,cluster_num);
+[cluster_centroid,cluster_idx] = clustering(X,start_centroid);
+
+all_centroids = handles.all_centroids;
+cluster_idx = channel_assign(all_centroids(:,1:2),cluster_centroid(:,1:2));
+event_infos = [all_centroids(:,[3,4,6]), cluster_idx];
+
+handles.event_infos = event_infos;
+handles.cluster_centroid = cluster_centroid;
+guidata(hObject,handles);
 
 % --- Executes on button press in ptn_savecluster.
 function ptn_savecluster_Callback(hObject, eventdata, handles)
@@ -726,3 +778,5 @@ SaveExcel(str,data,column_name,[],'ratio_info');
 handles.omited_event_infos = omited_event_infos;
 handles.omited_all_centroids = omited_all_centroids;
 guidata(hObject,handles);
+
+
