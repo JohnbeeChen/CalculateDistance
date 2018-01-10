@@ -345,7 +345,7 @@ centroids = tem;
 % centroids = centroids + boxs(:,1:2);
 col_name = {'centroid_x','centroid_y','event_order','order','intesity sum'};
 row_name = handles.roi_name_set{img_set_index};
-FormTable(centroids,boxs(:,5),col_name,row_name);
+FormTable(centroids,boxs(:,5),col_name,row_name,img_set_index);
 
 handles.centroids = centroids;
 guidata(hObject,handles);
@@ -474,6 +474,7 @@ xlabel('x/nm');
 ylabel('y.nm');
 grid minor
 axis equal;
+print(gcf,'-dpng','merge_centroids.png');
 save('merged_centroids.mat','merged_centroids');
 
 handles.merged_centroids = merged_centroids;
@@ -504,7 +505,7 @@ else
     start_centroid = xlsread(fullfile(pathname,filename));
 end
 
-[cluster_centroid,cluster_idx] = clustering(X,start_centroid);
+[cluster_centroid,cluster_idx] = clustering(X,start_centroid,'merged');
 
 all_centroids = handles.all_centroids; 
 cluster_idx = channel_assign(all_centroids(:,1:2),cluster_centroid(:,1:2));
@@ -532,7 +533,7 @@ start_centroid = PointsMerge(X(:,1:2),cluster_num);
 if isempty(start_centroid)
     return;
 end
-[cluster_centroid,cluster_idx] = clustering(X,start_centroid);
+[cluster_centroid,cluster_idx] = clustering(X,start_centroid,'merged');
 
 all_centroids = handles.all_centroids;
 cluster_idx = channel_assign(all_centroids(:,1:2),cluster_centroid(:,1:2));
@@ -559,7 +560,7 @@ else
 end
 
 [~,start_centroid,~] = kmeans(X,cluster_num);
-[cluster_centroid,cluster_idx] = clustering(X,start_centroid);
+[cluster_centroid,cluster_idx] = clustering(X,start_centroid,'merged');
 
 all_centroids = handles.all_centroids;
 cluster_idx = channel_assign(all_centroids(:,1:2),cluster_centroid(:,1:2));
@@ -600,7 +601,7 @@ cluster_centroid = handles.cluster_centroid;
 
 X = all_centroids(:,1:2);
 start_centroid = cluster_centroid;
-clustering(X,start_centroid);
+clustering(X,start_centroid,'all');
 
 [total_info,channel_info,channel_hist,ratio] = event_analysis(event_infos);
 folder_name = handles.folder_name;
@@ -622,8 +623,8 @@ data = channel_hist;
 SaveExcel(str,data,column_name,[],'channel_hist');
 
 column_name = {'zip idx','len per zip','len ratio','channel num per zip','num ratio'};
-row_name = handles.roi_filename;
-row_name{end+1} = 'All';
+% row_name = hsandles.roi_filename;
+% row_name{end+1} = 'All';
 data = ratio;
 SaveExcel(str,data,column_name,[],'ratio_info');
 
@@ -751,8 +752,8 @@ end
 % num_omited_cluster = size(omited_cluster_centroid,1);
 % omited_merged_centroids = PointsMerge(omited_merged_centroids,num_omited_cluster);
 % display the new clusters without the single point
-clustering(omited_merged_centroids(:,1:2),omited_cluster_centroid(:,1:2));
-clustering(omited_all_centroids(:,1:2),omited_cluster_centroid(:,1:2));
+clustering(omited_merged_centroids(:,1:2),omited_cluster_centroid(:,1:2),'merged_omited');
+clustering(omited_all_centroids(:,1:2),omited_cluster_centroid(:,1:2),'all_omited');
 
 fName =['\',folder_name,'_total_infoNoSingle.xlsx'];
 pName = cd;
@@ -778,5 +779,5 @@ SaveExcel(str,data,column_name,[],'ratio_info');
 handles.omited_event_infos = omited_event_infos;
 handles.omited_all_centroids = omited_all_centroids;
 guidata(hObject,handles);
-
-
+save('omited_all_centroids.mat','omited_all_centroids');
+save('omited_cluster_centroid.mat','omited_cluster_centroid');

@@ -58,6 +58,11 @@ fit_result = varargin{1};
 fram_index = varargin{2};
 col_name = varargin{3};
 row_name = varargin{4};
+try
+    roi_idx = varargin{5};
+catch
+    roi_idx = 0;
+end
 set(handles.uitable1,'RowName',row_name,'ColumnName',col_name,'Data',fit_result);
 
 % Update handles structure
@@ -67,6 +72,7 @@ handles.index = 1;
 handles.row_name = row_name;
 handles.col_name = col_name;
 handles.fram_index = fram_index;
+handles.roi_idx = roi_idx;
 guidata(hObject, handles);
 
 % UIWAIT makes FormTable wait for user response (see UIRESUME)
@@ -166,7 +172,7 @@ end
 hold off
 grid minor;
 axis equal;
-
+print(gcf,'-dpng',' all_centroids.png');
 legend(legend_name);
 xlabel 'x/nm',ylabel 'y/nm';
 if event_num > 0
@@ -305,7 +311,7 @@ xlabel('x/nm');
 ylabel('y.nm');
 grid minor
 axis equal;
-
+print(gcf,'-dpng',' merged_centroids.png');
 handles.merged_centroids = all_centroids;
 guidata(hObject,handles);
 
@@ -318,24 +324,36 @@ if ~exist('cluster_centroieds.mat','file')
     disp('clusetring firstly please!');
     return;
 end
-centroids = handles.all_centroids;
-figure;
-plot(centroids(:,1),centroids(:,2),'*');
+% load cluster_centroieds.mat;
+load omited_cluster_centroid.mat;
+C = omited_cluster_centroid;
 
-load cluster_centroieds.mat;
-hold on
-circle(C(:,1:2),15);
-grid minor;
-point_num = size(centroids,1);
-cluster_num = size(C,1);
-for ii = 1:point_num
-    p1 = centroids(ii,1:2);
-    p1 = p1(ones(cluster_num,1),:);
-    tem = p1 - C;
-    ds = diag(tem*tem');
-    idex = find(ds == min(ds));
-    hold on;
-    circle(C(idex,1:2),15,'r');
-    tem;
+roi_idx = handles.roi_idx;
+% centroids = handles.all_centroids;
+load omited_all_centroids.mat
+centroids = omited_all_centroids;
+len = max(centroids(:,3));
+for kk = 1:len
+    idx = omited_all_centroids(:,3) == kk;
+    centroids = omited_all_centroids(idx,:);
+    figure;
+    plot(centroids(:,1),centroids(:,2),'*');
+    
+    
+    hold on
+    circle(C(:,1:2),15);
+    grid minor;
+    point_num = size(centroids,1);
+    cluster_num = size(C,1);
+    for ii = 1:point_num
+        p1 = centroids(ii,1:2);
+        p1 = p1(ones(cluster_num,1),:);
+        tem = p1 - C;
+        ds = diag(tem*tem');
+        idex = find(ds == min(ds));
+        hold on;
+        circle(C(idex,1:2),15,'r');
+    end
+    
+    print(gcf,'-dpng',['event distribution_',num2str(kk),'.png']);
 end
-

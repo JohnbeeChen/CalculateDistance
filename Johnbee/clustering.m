@@ -3,6 +3,8 @@ function varargout = clustering(varargin)
 
 X = varargin{1};
 star_centroid  = varargin{2};
+name = varargin{3};
+
 opts = statset('Display','final');
 [idx,C,~] = kmeans(X,[],'Options',opts,'Start',star_centroid);
 % [~,min_distance] = FindNearestPoints(C);
@@ -24,7 +26,9 @@ area = pi*radiuses.^2;
 ave_area = mean(area);
 ave_radiuses = mean(radiuses);
 title(['circles average radius: ',num2str(ave_radiuses),';cluster number:',num2str(cluster_num)]);
-
+if ~isempty(name)
+    print(gcf,'-dpng',[name,'_leastcircle.png']);
+end
 figure;
 for ii = 1:cluster_num
     hold on
@@ -37,6 +41,10 @@ circle(C(:,1:2),15);
 hold off
 % title(['clusters number: ',num2str(cluster_num),',minimum distance: ',num2str(min_distance)]);
 grid minor;
+if ~isempty(name)
+    print(gcf,'-dpng',[name,'_cluster.png']);
+end
+
 save('cluster_centroieds.mat','C');
 
 varargout{1} = C;
