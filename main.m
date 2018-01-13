@@ -9,5 +9,6 @@ addpath([cd '/EventDetection']);
 addpath([cd '/Form']);
 addpath([cd '/test']);
 addpath([cd '/Johnbee']);
+addpath([cd '/GpuFit64']);
 
 run MainForm
