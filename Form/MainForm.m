@@ -312,6 +312,13 @@ if ~isfield(handles,'roi_set')
     disp('Please read roi files firstly!');
     return;
 end
+prompt={'Pixel size(nm):'};
+defaults={num2str(32.5)};
+info = inputdlg(prompt, 'Input for process...!', 1, defaults);
+pixelsize = 1;
+if ~isempty(info)
+    pixelsize = str2double(info(1));
+end
 img_set_index = handles.img_set_index;
 boxs = handles.roi_set{img_set_index};
 imgSIM = handles.img_set{img_set_index};
@@ -332,12 +339,16 @@ for ii = 1:len
     %selects the roi region in @event_fram
     tem_box = boxs(ii,:);
     event_frams_roi = KeepROI(event_frams,tem_box);
-    [centroids(ii,1:2),fit_imgs_weight] = GetCentroid(event_frams_roi);
+    fit_imgs_weight = 1;
+    fit_imgs = sum(event_frams_roi,3);
+    [ft_result,ft_precise] = GaussianFit2dCPU(fit_imgs,pixelsize);
+    %[centroid(ii,1:2),fit_imgs_weight] = GetCentroid(event_frams_roi);
+    centroids(ii,1:2) = ft_result(2:3);
     centroids(ii,5) = fit_imgs_weight;
     
 end
 tem_index = 1:len;
-tem = centroids(:,1:2) + boxs(:,1:2);
+tem = pixelsize*(centroids(:,1:2) + boxs(:,1:2));
 tem(:,3) = 1;
 tem = [tem tem_index'];
 tem(:,5) = centroids(:,5);
@@ -359,10 +370,18 @@ if ~isfield(handles,'roi_set')
     disp('Please read roi files firstly!');
     return;
 end
+prompt={'Pixel size(nm):'};
+defaults={num2str(32.5)};
+info = inputdlg(prompt, 'Input for process...!', 1, defaults);
+pixelsize = 1;
+if ~isempty(info)
+    pixelsize = str2double(info(1));
+end
 img_set = handles.img_set;
 roi_set = handles.roi_set;
 img_set_num = handles.imag_statck_num;
 centroid_set{img_set_num,1} = [];
+hwait = waitbar(0,'Fitting...');
 for idex = 1:img_set_num
     img_set_index = idex;
     boxs = roi_set{img_set_index};
@@ -387,20 +406,28 @@ for idex = 1:img_set_num
         tem_box = boxs(ii,:);
         event_frams_roi = KeepROI(event_frams,tem_box);
         %         fit_imgs_weight = sum(event_frams_roi(:));
-        [centroid(ii,1:2),fit_imgs_weight] = GetCentroid(event_frams_roi);
-        centroid(ii,5) = fit_imgs_weight;
+        fit_imgs_weight = 1;
+        fit_imgs = sum(event_frams_roi,3);
+        [ft_result,ft_precise] = GaussianFit2dCPU(fit_imgs,pixelsize);
+%         [centroid(ii,1:2),fit_imgs_weight] = GetCentroid(event_frams_roi);
+        centroid(ii,1:2) = ft_result(2:3);
+        
+%         centroid(ii,5) = fit_imgs_weight;
+        centroid(ii,5) = ft_result(7);
         centroid(ii,6) = tem_box(5);%frame index in the image's stack
     end
     tem_index = 1:len;
-    tem = centroid(:,1:2) + boxs(:,1:2);
+    tem = pixelsize*(centroid(:,1:2) + boxs(:,1:2));
     tem(:,3) = idex;
     tem = [tem tem_index'];
     tem(:,5:6) = centroid(:,5:6);
     centroid_set{idex} = tem;
     clear centroid;
+    waitbar(idex/img_set_num,hwait);
 end
-col_name = {'centroid_x','centroid_y','event_order','order','intesity sum','frame'};
-%centroids[centroids_x,centroids_y,roi_set index, index in roi_set{ii}]
+close(hwait);
+% col_name = {'centroid_x','centroid_y','event_order','order','intesity sum','frame'};
+col_name = {'centroid_x','centroid_y','event_order','order','Rsquare','frame'};
 centroids = cell2mat(centroid_set);
 boxs = cell2mat(roi_set);
 
@@ -411,7 +438,10 @@ for ii = 2:len
     row_names = [row_names tem{ii}];
 end
 
-all_centroids = FormTable(centroids,boxs(:,5),col_name,row_names);
+FormTable(centroids,boxs(:,5),col_name,row_names);
+idx = centroids(:,5) > 0;
+all_centroids = centroids(idx,:);
+save('all_centroids.mat','all_centroids');
 handles.all_centroids = all_centroids;
 handles.fit_imgs_weight = fit_imgs_weight;
 guidata(hObject,handles);
@@ -449,9 +479,10 @@ while 1
             tem_point = point_two(1:2) - point_one(1:2);
             distance =   sqrt(tem_point*tem_point');
             if distance <= thrd1
-                weight1 = point_one(5);
-                weight2 = point_two(5);
-                w = [weight1,weight2];
+%                 weight1 = point_one(5);
+%                 weight2 = point_two(5);
+%                 w = [weight1,weight2];
+                w = [1,1]; %don't employ weight
                 p = [point_one(1:2);point_two(1:2)];
                 %calculate the new centroids of @point_one and @point_two
                 new_p = (w*p)./(sum(w));

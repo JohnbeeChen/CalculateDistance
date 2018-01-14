@@ -76,7 +76,7 @@ handles.roi_idx = roi_idx;
 guidata(hObject, handles);
 
 % UIWAIT makes FormTable wait for user response (see UIRESUME)
-uiwait(handles.figure1);
+% uiwait(handles.figure1);
 
 
 % --- Executes during object deletion, before destroying properties.
@@ -96,9 +96,9 @@ function varargout = FormTable_OutputFcn(hObject, eventdata, handles)
 
 % Get default command line output from handles structure
 % t = handles.output;
-% varargout{1} = handles.output;
-t = 1;
-varargout{1} = handles.out1;
+varargout{1} = handles.output;
+% t = 1;
+% varargout{1} = handles.out1;
 
 
 % --- Executes on button press in btn_analysis.
@@ -106,13 +106,13 @@ function btn_analysis_Callback(hObject, eventdata, handles)
 % hObject    handle to btn_analysis (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-prompt={'Pixel size(nm):'};
-defaults={num2str(32.5)};
-info = inputdlg(prompt, 'Input for process...!', 1, defaults);
+% prompt={'Pixel size(nm):'};
+% defaults={num2str(32.5)};
+% info = inputdlg(prompt, 'Input for process...!', 1, defaults);
 pixesize = 1;
-if ~isempty(info)
-    pixesize = str2double(info(1));
-end
+% if ~isempty(info)
+%     pixesize = str2double(info(1));
+% end
 centroids = handles.rawdata;
 centroids(:,1:2) = pixesize * centroids(:,1:2);
 len = size(centroids,1);
@@ -179,7 +179,7 @@ if event_num > 0
     all_centroids = centroids;
     save('all_centroids.mat','all_centroids');
 end
-uiresume(handles.figure1);
+% uiresume(handles.figure1);
 
 
 function y = GetDistance(pointOne, pointTwo)

@@ -52,6 +52,9 @@ delta = CalculatePrecision(photon_number,backgraound,pk,sd);
 
 %% Output
 fitresult = [ft.amp,ft.x0,ft.y0,ft.sigma,ft.sigma,ft.z0,gof.rsquare];
+if ft.x0>max(x) || ft.x0<min(x) || ft.y0>max(y) || ft.y0<min(y)
+    fitresult(7) = -1; %indicates the fiting is not good
+end
 precision = [photon_number,backgraound,sd,sd,delta,delta];
 
 % if (gof.rsquare >= 0.8)&&(gof.rsquare < 0.9)
