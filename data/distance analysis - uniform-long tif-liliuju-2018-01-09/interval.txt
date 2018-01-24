@@ -1,0 +1,68 @@
+control:
+
+*CurveFit/M=2/W=0 exp_XOffset, control_e_Hist/D
+  Fit converged properly
+  fit_control_e_Hist= W_coef[0]+W_coef[1]*exp(-(x-W_fitConstants[0])/W_coef[2])
+  W_coef={-0.00056734,0.099934,9.3103}
+  W_fitConstants={0.88653}
+  V_chisq= 0.00110263;V_npnts= 17;V_numNaNs= 0;V_numINFs= 0;
+  V_startRow= 0;V_endRow= 16;
+  W_sigma={0.00726,0.00792,2.14}
+  Coefficient values ¡À one standard deviation
+  	y0 	=-0.00056734 ?0.00726
+  	A  	=0.099934 ?0.00792
+  	tau	=9.3103 ?2.14
+  Constant:
+  	X0	=0.886525
+
+
+
+tetracaine:
+
+*CurveFit/M=2/W=0 exp_XOffset, tetracaine_e_Hist/D
+  Fit converged properly
+  fit_tetracaine_e_Hist= W_coef[0]+W_coef[1]*exp(-(x-W_fitConstants[0])/W_coef[2])
+  W_coef={0.0033493,0.067023,10.051}
+  W_fitConstants={0.88653}
+  V_chisq= 0.00113739;V_npnts= 34;V_numNaNs= 0;V_numINFs= 0;
+  V_startRow= 0;V_endRow= 33;
+  W_sigma={0.00175,0.00435,1.37}
+  Coefficient values ¡À one standard deviation
+  	y0 	=0.0033493 ?0.00175
+  	A  	=0.067023 ?0.00435
+  	tau	=10.051 ?1.37
+  Constant:
+  	X0	=0.886525
+
+
+
+control_tetracaine:
+
+
+*CurveFit/M=2/W=0 exp_XOffset, control_tetracaine_e_Hist/D
+  Fit converged properly
+  fit_control_tetracaine_e_Hist= W_coef[0]+W_coef[1]*exp(-(x-W_fitConstants[0])/W_coef[2])
+  W_coef={0.0022763,0.078343,9.5734}
+  W_fitConstants={0.88653}
+  V_chisq= 0.000574269;V_npnts= 34;V_numNaNs= 0;V_numINFs= 0;
+  V_startRow= 0;V_endRow= 33;
+  W_sigma={0.0012,0.00314,0.789}
+  Coefficient values ¡À one standard deviation
+  	y0 	=0.0022763 ?0.0012
+  	A  	=0.078343 ?0.00314
+  	tau	=9.5734 ?0.789
+  Constant:
+  	X0	=0.886525
+
+
+
+
+
+
+
+
+
+
+
+\Z12\F'Symbol't
+

@@ -150,7 +150,11 @@ num = size(myBoxs,1);
 axes(myAxes);
 hold on
 for ii = 1:num
-    rectangle('Position',myBoxs(ii,1:4),'Curvature',[0,0],'LineWidth',1,'LineStyle','--','EdgeColor','r');
+    tem = myBoxs(ii,:);%[y1,x1,y2,x2]
+     X = [tem(2),tem(2),tem(2),tem(4);tem(4),tem(4),tem(2),tem(4)];
+     Y = [tem(1),tem(3),tem(1),tem(1);tem(1),tem(3),tem(3),tem(3)];
+     plot(X,Y,'r','LineWidth',1,'LineStyle','--');
+%     rectangle('Position',myBoxs(ii,1:4),'Curvature',[0,0],'LineWidth',1,'LineStyle','--','EdgeColor','r');
 end
 hold off
 
@@ -160,63 +164,9 @@ function btn_readROI_Callback(hObject, eventdata, handles)
 % hObject    handle to btn_readROI (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-if exist('lastfile.mat','file')
-    P=importdata('lastfile.mat');
-    pathname=P.pathname;
-else
-    pathname=cd;
-end
-[filename, pathname] = uigetfile( ...
-    {'*.zip;*.roi', 'All zip-Files (*.zip,*.zip)'; ...
-    '*.*','All Files (*.*)'}, ...
-    'Select ROI File',pathname,'MultiSelect','on');
-if isequal([filename,pathname],[0,0])
-    disp('file path is not correct!');
-    return
-end
-roi_set_num = length(filename);
-roi_set = cell(roi_set_num,1);
-roi_name_set = cell(roi_set_num,1);
-full_filename = fullfile(pathname,filename);
-% if @full_filename isn't a cell type that idicate that it inputs one file
-if ~iscell(full_filename)
-    tem{1} = full_filename;
-    clear full_filename;
-    full_filename{1} = tem{1};
-    roi_set_num = 1;
-end
-for ii = 1:roi_set_num
-    rois = ReadImageJROI(full_filename{ii});
-    roi_num = length(rois);
-    box =zeros(roi_num,5);
-    roi_names= cell(1,roi_num);
-    if roi_num == 1
-        box(1,1:4) = rois{1}.vnRectBounds;
-        box(1,5) = rois{1}.nPosition;
-        roi_names{1} = rois{1}.strName;
-    elseif roi_num > 1
-        for jj = 1:roi_num
-            tem = rois{jj};
-            box(jj,1:4) = tem.vnRectBounds;
-            box(jj,5) = tem.nPosition;
-            roi_names{jj} = tem.strName;
-        end
-    end
-    % changes the format of @box to [x y w h]
-    % notice: the loc in ImageJ start from 0, but Matlab start from 1
-    box(:,[4 3]) = box(:,3:4) - box(:,1:2) - 1;
-    box(:,1:2) = box(:,[2 1]) + 1;
-    idx = box(:,[1 2]) == 0;
-    box(idx) = 1;
-    img_size = size(handles.img_set{ii}(:,:,1));
-    idx = box(:,1) > img_size(2);
-    box(idx) = img_size(2);
-    idx = box(:,2) > img_size(1);
-    box(idx) = img_size(1);
-    
-    roi_set{ii} = box;
-    roi_name_set{ii} = roi_names;
-end
+ROI_path = GetROIPaths();
+[roi_set,roi_name_set] = ReadROI(ROI_path);
+
 img = handles.img_set{1}(:,:,1);
 imag_statck_num = handles.imag_statck_num;
 SetAxesImage(handles.axes1,img);
@@ -227,10 +177,9 @@ AddRectagle(handles.axes1,roi_set{1});
 handles.img_set_index = 1;
 handles.roi_set = roi_set;
 handles.roi_name_set = roi_name_set;
-handles.roi_filename = filename;
+handles.roi_filename = ROI_path;
 
 guidata(hObject,handles);
-
 
 
 % --- Executes on button press in btn_zprofile.
@@ -338,7 +287,7 @@ for ii = 1:len
     event_frams = imgSIM(:,:,event_duration);
     %selects the roi region in @event_fram
     tem_box = boxs(ii,:);
-    event_frams_roi = KeepROI(event_frams,tem_box);
+    event_frams_roi = KeepROI(event_frams,tem_box(1:4));
     fit_imgs_weight = 1;
     fit_imgs = sum(event_frams_roi,3);
     [ft_result,ft_precise] = GaussianFit2dCPU(fit_imgs,pixelsize);
@@ -381,6 +330,9 @@ img_set = handles.img_set;
 roi_set = handles.roi_set;
 img_set_num = handles.imag_statck_num;
 centroid_set{img_set_num,1} = [];
+% 1 photon = 0.82 electron, 1 electron = 2.2 intensity
+gray2photon = 1/(0.82*2.2);
+
 hwait = waitbar(0,'Fitting...');
 for idex = 1:img_set_num
     img_set_index = idex;
@@ -404,14 +356,14 @@ for idex = 1:img_set_num
         event_frams = imgSIM(:,:,event_duration);
         %selects the roi region in @event_fram
         tem_box = boxs(ii,:);
-        event_frams_roi = KeepROI(event_frams,tem_box);
+        event_frams_roi = KeepROI(event_frams,tem_box(1:4));
         %         fit_imgs_weight = sum(event_frams_roi(:));
         fit_imgs_weight = 1;
         fit_imgs = sum(event_frams_roi,3);
-        [ft_result,ft_precise] = GaussianFit2dCPU(fit_imgs,pixelsize);
+        [ft_result,ft_precise] = GaussianFit2dCPU(gray2photon*fit_imgs,pixelsize);
 %         [centroid(ii,1:2),fit_imgs_weight] = GetCentroid(event_frams_roi);
         centroid(ii,1:2) = ft_result(2:3);
-        
+        photonnum{idex}(ii,1:2) = [ft_precise(1),ft_result(7)];
 %         centroid(ii,5) = fit_imgs_weight;
         centroid(ii,5) = ft_result(7);
         centroid(ii,6) = tem_box(5);%frame index in the image's stack
@@ -438,14 +390,39 @@ for ii = 2:len
     row_names = [row_names tem{ii}];
 end
 
-FormTable(centroids,boxs(:,5),col_name,row_names);
+
 idx = centroids(:,5) > 0;
 all_centroids = centroids(idx,:);
+boxs(~idx,:) = [];
+phton = cell2mat(photonnum');
+idx = phton(:,2) > 0;
+phton(~idx,:) = [];
+
+try
+    load('lastfile.mat');
+    foldername = pathname;
+    stridx = strfind(foldername,'\');
+    if ~isempty(stridx)
+        foldername = foldername(stridx(end-1)+1:stridx(end)-1);
+        default_fname = ['PhotonNum_',foldername,'.xlsx'];
+    else
+        default_fname = ['PhotonNum.xlsx'];
+    end
+catch
+    default_fname = ['PhotonNum.xlsx'];
+end
+xlswrite(default_fname,phton);
+
+FormTable(all_centroids,boxs(:,5),col_name,row_names);
+
+
 save('all_centroids.mat','all_centroids');
 handles.all_centroids = all_centroids;
 handles.fit_imgs_weight = fit_imgs_weight;
 guidata(hObject,handles);
 
+figure;
+plot(all_centroids(:,1),all_centroids(:,2),'k.','MarkerSize',14);
 
 % --- Executes on button press in btn_Assort.
 function btn_Assort_Callback(hObject, eventdata, handles)

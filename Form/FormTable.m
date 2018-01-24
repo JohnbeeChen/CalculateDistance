@@ -245,7 +245,20 @@ function btn_savenearestdistance_Callback(hObject, eventdata, handles)
 if ~isfield(handles,'nearestdistance')
     disp('the nearest distance does not exist');
 end
-[fName,pName,index] = uiputfile('*.xlsx','Save as','nearest_disance.xlsx');
+try
+    load('lastfile.mat');
+    foldername = pathname;
+    idx = strfind(foldername,'\');
+    if ~isempty(idx)
+        foldername = foldername(idx(end-1)+1:idx(end)-1);
+        default_fname = ['nearest_disance_',foldername,'.xlsx'];
+    else
+        default_fname = ['nearest_disance.xlsx'];
+    end
+catch
+    default_fname = ['nearest_disance.xlsx'];
+end
+[fName,pName,index] = uiputfile('*.xlsx','Save as',default_fname);
 if index && strcmp(fName(end-4:end),'.xlsx')
     str = [pName fName];
     data = handles.nearestdistance;
